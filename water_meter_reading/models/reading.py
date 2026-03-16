@@ -8,6 +8,7 @@ class WaterReading(models.Model):
 
     name = fields.Char(string='Referencia', readonly=True, copy=False)
     meter_id = fields.Many2one('water.meter', string='Contador', required=True, ondelete='cascade')
+    meter_number = fields.Char(related='meter_id.meter_number', string='Contador Nº', store=True, readonly=True)
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
     date = fields.Date(string='Fecha', required=True, default=fields.Date.context_today)
     reading_previous = fields.Integer(string='Lectura anterior', readonly=True)
