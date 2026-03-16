@@ -92,7 +92,8 @@
     <field name="arch" type="xml">
       <list string="Lecturas" decoration-danger="difference &lt; 0">
         <field name="name"/>
-        <field name="meter_id"/>
+        <field name="meter_id" string="Contador"/>
+        <field name="meter_route" string="Ruta"/>
         <field name="date"/>
         <field name="reading_previous"/>
         <field name="reading_current"/>
@@ -114,7 +115,8 @@
           </div>
           <group string="Datos de la lectura">
             <group>
-              <field name="meter_id"/>
+              <field name="meter_id" string="Contador"/>
+              <field name="meter_route" string="Ruta"/>
               <field name="date"/>
               <field name="user_id"/>
             </group>
