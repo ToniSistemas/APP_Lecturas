@@ -85,6 +85,31 @@
 
   <!-- Menú Lecturas eliminado: acceso solo a través de Períodos -->
 
+  <!-- Vista búsqueda: Lecturas -->
+  <record id="view_water_reading_search" model="ir.ui.view">
+    <field name="name">water.reading.search</field>
+    <field name="model">water.reading</field>
+    <field name="arch" type="xml">
+      <search string="Buscar lecturas">
+        <field name="meter_number" string="Contador"/>
+        <field name="meter_route" string="Ruta"/>
+        <field name="meter_owner_name" string="Nombre"/>
+        <field name="meter_municipality" string="Municipio"/>
+        <field name="meter_zip" string="Código postal"/>
+        <filter string="Diferencia negativa" name="negative_diff"
+                domain="[('difference','&lt;',0)]"/>
+        <group expand="0" string="Agrupar por">
+          <filter string="Período" name="group_period"
+                  context="{'group_by': 'period_id'}"/>
+          <filter string="Municipio" name="group_municipality"
+                  context="{'group_by': 'meter_municipality'}"/>
+          <filter string="Ruta" name="group_route"
+                  context="{'group_by': 'meter_route'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
   <!-- Vista lista: Lecturas -->
   <record id="view_water_reading_list" model="ir.ui.view">
     <field name="name">water.reading.list</field>

@@ -73,3 +73,14 @@ class WaterPeriod(models.Model):
     def action_reopen(self):
         self.ensure_one()
         self.state = 'open'
+
+    def action_view_readings_search(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Lecturas \u2013 {self.name}',
+            'res_model': 'water.reading',
+            'view_mode': 'list,form',
+            'domain': [('period_id', '=', self.id)],
+            'context': {'default_period_id': self.id},
+        }
