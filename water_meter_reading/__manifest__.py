@@ -1,6 +1,6 @@
 {
     'name': 'Water Meter Readings',
-    'version': '18.0.1.11.0',
+    'version': '18.0.1.12.0',
     'summary': 'Registro de lecturas de contadores de agua',
     'category': 'Tools',
     'author': 'Toni',

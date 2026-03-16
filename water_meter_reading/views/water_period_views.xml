@@ -12,7 +12,7 @@
   </record>
 
   <menuitem id="menu_water_periods" name="Períodos" parent="menu_water_root"
-            action="action_water_period" sequence="3"/>
+            action="action_water_period" sequence="1"/>
 
   <!-- Vista lista: Períodos -->
   <record id="view_water_period_list" model="ir.ui.view">

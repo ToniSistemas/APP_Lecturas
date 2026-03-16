@@ -17,7 +17,7 @@
   </record>
 
   <menuitem id="menu_water_meters" name="Contadores" parent="menu_water_root"
-            action="action_water_meter" sequence="1"/>
+            action="action_water_meter" sequence="2"/>
 
   <!-- Vista lista: Contadores -->
   <record id="view_water_meter_list" model="ir.ui.view">
