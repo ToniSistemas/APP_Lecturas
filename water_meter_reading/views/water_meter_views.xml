@@ -124,10 +124,7 @@
               <field name="user_id"/>
             </group>
             <group>
-              <field name="reading_previous" readonly="1"
-                     groups="!water_meter_reading.group_water_supervisor"/>
-              <field name="reading_previous"
-                     groups="water_meter_reading.group_water_supervisor"/>
+              <field name="reading_previous" readonly="not allow_edit_previous"/>
               <field name="reading_current"/>
               <field name="difference" readonly="1"/>
             </group>

@@ -18,6 +18,15 @@ class WaterReading(models.Model):
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
     period_id = fields.Many2one('water.period', string='Período', ondelete='set null', index=True)
     photo_ids = fields.One2many('water.reading.photo', 'reading_id', string='Fotografías')
+    allow_edit_previous = fields.Boolean(
+        compute='_compute_allow_edit_previous',
+        string='Puede editar lectura anterior',
+    )
+
+    def _compute_allow_edit_previous(self):
+        can_edit = self.env.user.can_edit_readings
+        for rec in self:
+            rec.allow_edit_previous = can_edit
 
     @api.depends('reading_current', 'reading_previous')
     def _compute_difference(self):
