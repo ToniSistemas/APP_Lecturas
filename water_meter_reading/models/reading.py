@@ -31,13 +31,15 @@ class WaterReading(models.Model):
             if last:
                 self.reading_previous = last.reading_current
 
-    @api.model
-    def create(self, vals):
-        if vals.get('meter_id') and not vals.get('reading_previous'):
-            last = self.env['water.reading'].search([('meter_id', '=', vals.get('meter_id'))], order='date desc', limit=1)
-            if last:
-                vals['reading_previous'] = last.reading_current
-        if not vals.get('name'):
-            seq = self.env['ir.sequence'].next_by_code('water.reading') or '/'
-            vals['name'] = seq
-        return super().create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('meter_id') and not vals.get('reading_previous'):
+                last = self.env['water.reading'].search(
+                    [('meter_id', '=', vals['meter_id'])], order='date desc', limit=1
+                )
+                if last:
+                    vals['reading_previous'] = last.reading_current
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('water.reading') or '/'
+        return super().create(vals_list)

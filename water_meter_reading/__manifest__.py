@@ -5,7 +5,7 @@
     'category': 'Tools',
     'author': 'Toni',
     'license': 'LGPL-3',
-    'depends': ['base','mail','web'],
+    'depends': ['base', 'mail'],
     'data': [
         'security/ir.model.access.csv',
         'views/water_meter_views.xml',
