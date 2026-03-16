@@ -59,9 +59,10 @@
                 <list editable="bottom" string="Lecturas">
                   <field name="name"/>
                   <field name="date"/>
-                  <field name="reading_previous"/>
+                  <field name="allow_edit_previous" column_invisible="1"/>
+                  <field name="reading_previous" readonly="not allow_edit_previous"/>
                   <field name="reading_current"/>
-                  <field name="difference"/>
+                  <field name="difference" readonly="1"/>
                   <field name="observations"/>
                 </list>
               </field>
@@ -129,6 +130,7 @@
               <field name="difference" readonly="1"/>
             </group>
           </group>
+          <field name="allow_edit_previous" invisible="1"/>
           <group string="Observaciones">
             <field name="observations" nolabel="1" placeholder="Notas sobre esta lectura..."/>
           </group>
