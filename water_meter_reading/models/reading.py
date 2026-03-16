@@ -23,8 +23,9 @@ class WaterReading(models.Model):
         string='Puede editar lectura anterior',
     )
 
+    @api.depends_context('uid')
     def _compute_allow_edit_previous(self):
-        can_edit = self.env.user.can_edit_readings
+        can_edit = self.env.user.sudo().can_edit_readings
         for rec in self:
             rec.allow_edit_previous = can_edit
 
