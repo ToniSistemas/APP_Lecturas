@@ -1,6 +1,6 @@
 {
     'name': 'Water Meter Readings',
-    'version': '18.0.1.1.0',
+    'version': '18.0.1.2.0',
     'summary': 'Registro de lecturas de contadores de agua',
     'category': 'Tools',
     'author': 'Toni',
@@ -9,6 +9,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/water_meter_views.xml',
+        'views/water_period_views.xml',
         'data/sequence_data.xml',
     ],
     'installable': True,

@@ -92,6 +92,7 @@
     <field name="arch" type="xml">
       <list string="Lecturas" decoration-danger="difference &lt; 0">
         <field name="name"/>
+        <field name="period_id" string="Período"/>
         <field name="meter_number" string="Contador"/>
         <field name="meter_route" string="Ruta"/>
         <field name="date"/>
@@ -118,6 +119,7 @@
               <field name="meter_id" string="Seleccionar contador"/>
               <field name="meter_number" string="Contador" readonly="1"/>
               <field name="meter_route" string="Ruta"/>
+              <field name="period_id" string="Período"/>
               <field name="date"/>
               <field name="user_id"/>
             </group>

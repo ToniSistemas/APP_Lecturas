@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Acción: Períodos -->
+  <record id="action_water_period" model="ir.actions.act_window">
+    <field name="name">Períodos</field>
+    <field name="res_model">water.period</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Crea el primer período trimestral</p>
+    </field>
+  </record>
+
+  <menuitem id="menu_water_periods" name="Períodos" parent="menu_water_root"
+            action="action_water_period" sequence="3"/>
+
+  <!-- Vista lista: Períodos -->
+  <record id="view_water_period_list" model="ir.ui.view">
+    <field name="name">water.period.list</field>
+    <field name="model">water.period</field>
+    <field name="arch" type="xml">
+      <list string="Períodos">
+        <field name="name" string="Período"/>
+        <field name="trimester"/>
+        <field name="year"/>
+        <field name="state"/>
+        <field name="reading_count" string="Nº lecturas"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Vista formulario: Períodos -->
+  <record id="view_water_period_form" model="ir.ui.view">
+    <field name="name">water.period.form</field>
+    <field name="model">water.period</field>
+    <field name="arch" type="xml">
+      <form string="Período">
+        <header>
+          <button name="action_generate_readings" type="object"
+                  string="Generar lecturas" class="btn-primary"
+                  invisible="state == 'closed'"/>
+          <button name="action_close" type="object"
+                  string="Cerrar período"
+                  invisible="state != 'open'"/>
+          <button name="action_reopen" type="object"
+                  string="Reabrir período"
+                  invisible="state != 'closed'"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,open,closed"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="trimester"/>
+              <field name="year"/>
+            </group>
+            <group>
+              <field name="reading_count" string="Contadores registrados"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Lecturas" name="readings">
+              <field name="reading_ids">
+                <list string="Lecturas" editable="bottom"
+                      decoration-danger="difference &lt; 0">
+                  <field name="meter_number" string="Contador" readonly="1"/>
+                  <field name="meter_route" string="Ruta" readonly="1"/>
+                  <field name="date"/>
+                  <field name="reading_previous" readonly="1"/>
+                  <field name="reading_current"/>
+                  <field name="difference" readonly="1"/>
+                  <field name="observations"/>
+                </list>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+</odoo>

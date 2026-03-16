@@ -16,6 +16,7 @@ class WaterReading(models.Model):
     difference = fields.Integer(string='Diferencia', compute='_compute_difference', store=True)
     observations = fields.Text(string='Observaciones')
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
+    period_id = fields.Many2one('water.period', string='Período', ondelete='set null', index=True)
     photo_ids = fields.One2many('water.reading.photo', 'reading_id', string='Fotografías')
 
     @api.depends('reading_current', 'reading_previous')
