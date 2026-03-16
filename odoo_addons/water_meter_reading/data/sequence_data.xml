@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="seq_water_reading" model="ir.sequence">
+    <field name="name">Water Reading</field>
+    <field name="code">water.reading</field>
+    <field name="padding">4</field>
+    <field name="prefix">LR/</field>
+  </record>
+</odoo>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="menu_water_root" model="ir.ui.menu">
+    <field name="name">Lecturas Agua</field>
+    <field name="sequence">10</field>
+  </record>
+
+  <record id="menu_water_meters" model="ir.ui.menu">
+    <field name="name">Contadores</field>
+    <field name="parent_id" ref="menu_water_root"/>
+    <field name="sequence">1</field>
+  </record>
+
+  <record id="action_water_meter" model="ir.actions.act_window">
+    <field name="name">Contadores</field>
+    <field name="res_model">water.meter</field>
+    <field name="view_mode">tree,form</field>
+    <field name="help">Registra contadores y sus lecturas.</field>
+  </record>
+
+  <record id="menu_water_meters_action" model="ir.ui.menu">
+    <field name="name">Contadores</field>
+    <field name="parent_id" ref="menu_water_root"/>
+    <field name="action" ref="action_water_meter"/>
+  </record>
+
+  <record id="view_water_meter_tree" model="ir.ui.view">
+    <field name="name">water.meter.tree</field>
+    <field name="model">water.meter</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="name"/>
+        <field name="meter_number"/>
+        <field name="owner_name"/>
+        <field name="municipality"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_water_meter_form" model="ir.ui.view">
+    <field name="name">water.meter.form</field>
+    <field name="model">water.meter</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="meter_number"/>
+            <field name="address"/>
+            <field name="zip"/>
+            <field name="municipality"/>
+            <field name="owner_name"/>
+          </group>
+          <notebook>
+            <page string="Lecturas">
+              <field name="reading_ids">
+                <tree editable="bottom">
+                  <field name="date"/>
+                  <field name="reading_previous"/>
+                  <field name="reading_current"/>
+                  <field name="difference"/>
+                </tree>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Readings views -->
+  <record id="action_water_reading" model="ir.actions.act_window">
+    <field name="name">Lecturas</field>
+    <field name="res_model">water.reading</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <menuitem id="menu_water_readings" name="Lecturas" parent="menu_water_root" action="action_water_reading"/>
+
+  <record id="view_water_reading_tree" model="ir.ui.view">
+    <field name="name">water.reading.tree</field>
+    <field name="model">water.reading</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="name"/>
+        <field name="meter_id"/>
+        <field name="date"/>
+        <field name="reading_previous"/>
+        <field name="reading_current"/>
+        <field name="difference"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_water_reading_form" model="ir.ui.view">
+    <field name="name">water.reading.form</field>
+    <field name="model">water.reading</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="meter_id"/>
+            <field name="date"/>
+          </group>
+          <group>
+            <field name="reading_previous"/>
+            <field name="reading_current"/>
+            <field name="difference"/>
+          </group>
+          <group>
+            <field name="observations"/>
+          </group>
+          <group>
+            <field name="photo_ids">
+              <tree editable="bottom">
+                <field name="image_name"/>
+                <field name="image" widget="image"/>
+                <field name="timestamp"/>
+              </tree>
+            </field>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+</odoo>
