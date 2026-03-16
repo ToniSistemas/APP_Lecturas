@@ -20,6 +20,10 @@ class WaterMeter(models.Model):
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
 
-    def name_get(self):
-        return [(rec.id, f"{rec.meter_number} – {rec.name}" if rec.name else rec.meter_number)
-                for rec in self]
+    def _compute_display_name(self):
+        for rec in self:
+            rec.display_name = (
+                f"{rec.meter_number} – {rec.name}"
+                if rec.meter_number and rec.name
+                else (rec.meter_number or rec.name or '')
+            )
