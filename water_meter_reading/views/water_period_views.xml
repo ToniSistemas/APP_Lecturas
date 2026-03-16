@@ -69,7 +69,10 @@
                   <field name="meter_number" string="Contador" readonly="1"/>
                   <field name="meter_route" string="Ruta" readonly="1"/>
                   <field name="date"/>
-                  <field name="reading_previous" readonly="not can_edit_previous"/>
+                  <field name="reading_previous" readonly="1"
+                         groups="!water_meter_reading.group_water_supervisor"/>
+                  <field name="reading_previous"
+                         groups="water_meter_reading.group_water_supervisor"/>
                   <field name="reading_current"/>
                   <field name="difference" readonly="1"/>
                   <field name="observations"/>
