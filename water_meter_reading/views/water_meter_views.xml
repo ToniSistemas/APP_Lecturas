@@ -27,6 +27,7 @@
   <record id="view_water_meter_tree" model="ir.ui.view">
     <field name="name">water.meter.tree</field>
     <field name="model">water.meter</field>
+    <field name="type" ref="base.view_type_tree"/>
     <field name="arch" type="xml">
       <tree>
         <field name="name"/>
@@ -40,6 +41,7 @@
   <record id="view_water_meter_form" model="ir.ui.view">
     <field name="name">water.meter.form</field>
     <field name="model">water.meter</field>
+    <field name="type" ref="base.view_type_form"/>
     <field name="arch" type="xml">
       <form>
         <sheet>
@@ -80,6 +82,7 @@
   <record id="view_water_reading_tree" model="ir.ui.view">
     <field name="name">water.reading.tree</field>
     <field name="model">water.reading</field>
+    <field name="type" ref="base.view_type_tree"/>
     <field name="arch" type="xml">
       <tree>
         <field name="name"/>
@@ -95,6 +98,7 @@
   <record id="view_water_reading_form" model="ir.ui.view">
     <field name="name">water.reading.form</field>
     <field name="model">water.reading</field>
+    <field name="type" ref="base.view_type_form"/>
     <field name="arch" type="xml">
       <form>
         <sheet>
