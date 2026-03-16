@@ -121,9 +121,9 @@
               <field name="user_id"/>
             </group>
             <group>
-              <field name="reading_previous"/>
+              <field name="reading_previous" readonly="1"/>
               <field name="reading_current"/>
-              <field name="difference" widget="statinfo"/>
+              <field name="difference" readonly="1"/>
             </group>
           </group>
           <group string="Observaciones">

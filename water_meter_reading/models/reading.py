@@ -10,9 +10,9 @@ class WaterReading(models.Model):
     meter_id = fields.Many2one('water.meter', string='Contador', required=True, ondelete='cascade')
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
     date = fields.Date(string='Fecha', required=True, default=fields.Date.context_today)
-    reading_previous = fields.Float(string='Lectura anterior', digits=(12, 3))
-    reading_current = fields.Float(string='Lectura actual', digits=(12, 3))
-    difference = fields.Float(string='Diferencia', compute='_compute_difference', store=True)
+    reading_previous = fields.Integer(string='Lectura anterior', readonly=True)
+    reading_current = fields.Integer(string='Lectura actual')
+    difference = fields.Integer(string='Diferencia', compute='_compute_difference', store=True)
     observations = fields.Text(string='Observaciones')
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
     photo_ids = fields.One2many('water.reading.photo', 'reading_id', string='Fotografías')
@@ -20,10 +20,7 @@ class WaterReading(models.Model):
     @api.depends('reading_current', 'reading_previous')
     def _compute_difference(self):
         for rec in self:
-            if rec.reading_current is not False and rec.reading_previous is not False:
-                rec.difference = rec.reading_current - rec.reading_previous
-            else:
-                rec.difference = 0.0
+            rec.difference = rec.reading_current - rec.reading_previous
 
     @api.onchange('meter_id')
     def _onchange_meter_id(self):
