@@ -18,6 +18,7 @@ class WaterReading(models.Model):
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
     period_id = fields.Many2one('water.period', string='Período', ondelete='set null', index=True)
     photo_ids = fields.One2many('water.reading.photo', 'reading_id', string='Fotografías')
+    counter_photo = fields.Image(string='Foto del contador', max_width=1024, max_height=1024)
     allow_edit_previous = fields.Boolean(
         compute='_compute_allow_edit_previous',
         string='Puede editar lectura anterior',
@@ -25,7 +26,8 @@ class WaterReading(models.Model):
 
     @api.depends_context('uid')
     def _compute_allow_edit_previous(self):
-        can_edit = self.env.user.sudo().can_edit_readings
+        user = self.env.user.sudo()
+        can_edit = user.can_edit_readings or user.has_group('water_meter_reading.group_water_supervisor')
         for rec in self:
             rec.allow_edit_previous = can_edit
 

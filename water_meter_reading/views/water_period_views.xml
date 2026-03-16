@@ -74,6 +74,7 @@
                   <field name="reading_current"/>
                   <field name="difference" readonly="1"/>
                   <field name="observations"/>
+                  <field name="counter_photo" widget="image" string="Foto" options="{&quot;size&quot;: [64, 64]}"/>
                 </list>
               </field>
             </page>

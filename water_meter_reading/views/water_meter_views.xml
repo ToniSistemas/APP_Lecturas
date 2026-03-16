@@ -83,8 +83,7 @@
     </field>
   </record>
 
-  <menuitem id="menu_water_readings" name="Lecturas" parent="menu_water_root"
-            action="action_water_reading" sequence="2"/>
+  <!-- Menú Lecturas eliminado: acceso solo a través de Períodos -->
 
   <!-- Vista lista: Lecturas -->
   <record id="view_water_reading_list" model="ir.ui.view">
