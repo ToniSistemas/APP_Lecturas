@@ -136,11 +136,9 @@
     <field name="arch" type="xml">
       <form string="Lectura">
         <sheet>
-          <div class="oe_right">
-            <field name="counter_photo" widget="camera_image"
-                   options="{&quot;size&quot;: [180, 180]}"
-                   placeholder="Foto del contador"/>
-          </div>
+          <field name="counter_photo" widget="camera_image" class="oe_avatar"
+                 options="{'size': [128, 128], 'zoom': true}"
+                 placeholder="/web/static/img/placeholder.png"/>
           <div class="oe_title">
             <h1><field name="name" readonly="1"/></h1>
           </div>
