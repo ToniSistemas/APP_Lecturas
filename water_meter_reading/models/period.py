@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, AccessError
 
 
 class WaterPeriod(models.Model):
@@ -73,6 +73,11 @@ class WaterPeriod(models.Model):
     def action_reopen(self):
         self.ensure_one()
         self.state = 'open'
+
+    def unlink(self):
+        if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
+            raise AccessError(_('Solo los supervisores pueden eliminar períodos.'))
+        return super().unlink()
 
     def action_view_readings_search(self):
         self.ensure_one()

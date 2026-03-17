@@ -17,6 +17,9 @@ class WaterMeter(models.Model):
     zip = fields.Char(string='C.P.')
     municipality = fields.Char(string='Municipio')
     owner_name = fields.Char(string='Nombre')
+    subscriber = fields.Char(string='Abonado')
+    cadastral_ref = fields.Char(string='Referencia catastral')
+    reversed_meter = fields.Boolean(string='Contador al revés', default=False)
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
 

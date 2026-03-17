@@ -28,8 +28,10 @@
         <field name="name"/>
         <field name="meter_number"/>
         <field name="owner_name"/>
+        <field name="subscriber" optional="hide"/>
         <field name="address"/>
         <field name="municipality"/>
+        <field name="reversed_meter" optional="hide"/>
       </list>
     </field>
   </record>
@@ -46,6 +48,9 @@
               <field name="name"/>
               <field name="meter_number"/>
               <field name="owner_name"/>
+              <field name="subscriber"/>
+              <field name="cadastral_ref"/>
+              <field name="reversed_meter"/>
             </group>
             <group>
               <field name="address"/>
