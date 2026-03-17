@@ -48,7 +48,10 @@ class WaterReading(models.Model):
     @api.onchange('meter_id')
     def _onchange_meter_id(self):
         if self.meter_id:
-            last = self.env['water.reading'].search([('meter_id', '=', self.meter_id.id)], order='date desc', limit=1)
+            last = self.env['water.reading'].search(
+                [('meter_id', '=', self.meter_id.id)],
+                order='date desc, id desc', limit=1
+            )
             if last:
                 self.reading_previous = last.reading_current
 
@@ -57,7 +60,8 @@ class WaterReading(models.Model):
         for vals in vals_list:
             if vals.get('meter_id') and not vals.get('reading_previous'):
                 last = self.env['water.reading'].search(
-                    [('meter_id', '=', vals['meter_id'])], order='date desc', limit=1
+                    [('meter_id', '=', vals['meter_id'])],
+                    order='date desc, id desc', limit=1
                 )
                 if last:
                     vals['reading_previous'] = last.reading_current

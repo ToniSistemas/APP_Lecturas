@@ -54,7 +54,7 @@ class WaterPeriod(models.Model):
         vals_list = []
         for meter in pending:
             last = Reading.search(
-                [('meter_id', '=', meter.id)], order='date desc', limit=1
+                [('meter_id', '=', meter.id)], order='date desc, id desc', limit=1
             )
             vals_list.append({
                 'meter_id': meter.id,
