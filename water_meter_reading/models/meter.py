@@ -13,6 +13,7 @@ class WaterMeter(models.Model):
 
     name = fields.Char(string='Ruta', required=True)
     meter_number = fields.Char(string='Contador', required=True)
+    active = fields.Boolean(string='Activo', default=True)
     address = fields.Char(string='Dirección')
     zip = fields.Char(string='C.P.')
     municipality = fields.Char(string='Municipio')
@@ -39,7 +40,7 @@ class WaterMeter(models.Model):
         )
         if latest_period:
             Reading = self.env['water.reading']
-            for meter in records:
+            for meter in records.filtered('active'):
                 last = Reading.search(
                     [('meter_id', '=', meter.id)], order='date desc, create_date desc', limit=1
                 )

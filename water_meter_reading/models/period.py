@@ -54,7 +54,7 @@ class WaterPeriod(models.Model):
         self.ensure_one()
         if self.state == 'closed':
             raise UserError(_('No se pueden generar lecturas en un período cerrado.'))
-        all_meters = self.env['water.meter'].search([])
+        all_meters = self.env['water.meter'].search([('active', '=', True)])
         existing_meters = self.reading_ids.mapped('meter_id')
         pending = all_meters - existing_meters
         if not pending:
