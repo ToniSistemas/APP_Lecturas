@@ -41,7 +41,7 @@ class WaterMeter(models.Model):
             Reading = self.env['water.reading']
             for meter in records:
                 last = Reading.search(
-                    [('meter_id', '=', meter.id)], order='date desc, id desc', limit=1
+                    [('meter_id', '=', meter.id)], order='date desc, create_date desc', limit=1
                 )
                 Reading.create({
                     'meter_id': meter.id,

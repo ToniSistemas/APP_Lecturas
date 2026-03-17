@@ -50,7 +50,7 @@ class WaterReading(models.Model):
         if self.meter_id:
             last = self.env['water.reading'].search(
                 [('meter_id', '=', self.meter_id.id)],
-                order='date desc, id desc', limit=1
+                order='date desc, create_date desc', limit=1
             )
             if last:
                 self.reading_previous = last.reading_current
@@ -58,10 +58,10 @@ class WaterReading(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('meter_id') and not vals.get('reading_previous'):
+            if vals.get('meter_id') and 'reading_previous' not in vals:
                 last = self.env['water.reading'].search(
                     [('meter_id', '=', vals['meter_id'])],
-                    order='date desc, id desc', limit=1
+                    order='date desc, create_date desc', limit=1
                 )
                 if last:
                     vals['reading_previous'] = last.reading_current
