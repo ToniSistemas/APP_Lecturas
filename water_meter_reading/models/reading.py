@@ -45,26 +45,65 @@ class WaterReading(models.Model):
                 diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
             rec.difference = diff
 
-    @api.onchange('meter_id')
+    @api.onchange('meter_id', 'period_id')
     def _onchange_meter_id(self):
-        if self.meter_id:
+        if not self.meter_id:
+            return
+        prev_value = 0
+        if self.period_id:
+            # Look in the previous period for this meter's reading
+            period = self.period_id
+            t = int(period.trimester)
+            prev_t, prev_y = ('4', period.year - 1) if t == 1 else (str(t - 1), period.year)
+            prev_period = self.env['water.period'].search(
+                [('trimester', '=', prev_t), ('year', '=', prev_y)], limit=1
+            )
+            if prev_period:
+                prev_reading = self.env['water.reading'].search(
+                    [('meter_id', '=', self.meter_id.id),
+                     ('period_id', '=', prev_period.id)], limit=1
+                )
+                if prev_reading:
+                    prev_value = prev_reading.reading_current
+        if not prev_value:
+            # Fallback: generic last reading excluding current period
             last = self.env['water.reading'].search(
-                [('meter_id', '=', self.meter_id.id)],
+                [('meter_id', '=', self.meter_id.id),
+                 ('period_id', '!=', self.period_id.id if self.period_id else False)],
                 order='date desc, create_date desc', limit=1
             )
-            if last:
-                self.reading_previous = last.reading_current
+            prev_value = last.reading_current if last else 0
+        self.reading_previous = prev_value
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('meter_id') and 'reading_previous' not in vals:
-                last = self.env['water.reading'].search(
-                    [('meter_id', '=', vals['meter_id'])],
-                    order='date desc, create_date desc', limit=1
-                )
-                if last:
-                    vals['reading_previous'] = last.reading_current
+                prev_value = 0
+                period_id = vals.get('period_id')
+                if period_id:
+                    period = self.env['water.period'].browse(period_id)
+                    t = int(period.trimester)
+                    prev_t = '4' if t == 1 else str(t - 1)
+                    prev_y = period.year - 1 if t == 1 else period.year
+                    prev_period = self.env['water.period'].search(
+                        [('trimester', '=', prev_t), ('year', '=', prev_y)], limit=1
+                    )
+                    if prev_period:
+                        prev_reading = self.search(
+                            [('meter_id', '=', vals['meter_id']),
+                             ('period_id', '=', prev_period.id)], limit=1
+                        )
+                        if prev_reading:
+                            prev_value = prev_reading.reading_current
+                if not prev_value:
+                    last = self.search(
+                        [('meter_id', '=', vals['meter_id']),
+                         ('period_id', '!=', period_id)],
+                        order='date desc, create_date desc', limit=1
+                    )
+                    prev_value = last.reading_current if last else 0
+                vals['reading_previous'] = prev_value
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('water.reading') or '/'
         return super().create(vals_list)
