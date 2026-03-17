@@ -91,6 +91,66 @@ class WaterPeriod(models.Model):
         if self.state == 'draft':
             self.state = 'open'
 
+    def action_export_excel(self):
+        import io
+        import base64
+        import xlsxwriter
+
+        self.ensure_one()
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        ws = workbook.add_worksheet('Lecturas')
+
+        bold = workbook.add_format({'bold': True, 'bg_color': '#4472C4', 'font_color': '#FFFFFF'})
+        date_fmt = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+
+        headers = ['Contador', 'Ruta', 'Nombre', 'Abonado', 'Municipio', 'C.P.',
+                   'Referencia catastral', 'Fecha', 'Lectura anterior',
+                   'Lectura actual', 'Diferencia', 'Observaciones']
+        for col, h in enumerate(headers):
+            ws.write(0, col, h, bold)
+            ws.set_column(col, col, 15)
+        ws.set_column(2, 2, 20)  # Nombre
+        ws.set_column(11, 11, 30)  # Observaciones
+
+        for row, r in enumerate(self.reading_ids, start=1):
+            ws.write(row, 0, r.meter_number or '')
+            ws.write(row, 1, r.meter_route or '')
+            ws.write(row, 2, r.meter_owner_name or '')
+            ws.write(row, 3, r.meter_id.subscriber or '')
+            ws.write(row, 4, r.meter_municipality or '')
+            ws.write(row, 5, r.meter_zip or '')
+            ws.write(row, 6, r.meter_id.cadastral_ref or '')
+            if r.date:
+                ws.write_datetime(row, 7,
+                    r.date.strftime('%Y-%m-%dT00:00:00') and
+                    __import__('datetime').datetime.combine(r.date, __import__('datetime').time()),
+                    date_fmt)
+            else:
+                ws.write(row, 7, '')
+            ws.write(row, 8, r.reading_previous)
+            ws.write(row, 9, r.reading_current)
+            ws.write(row, 10, r.difference)
+            ws.write(row, 11, r.observations or '')
+
+        workbook.close()
+        output.seek(0)
+        xlsx_data = base64.b64encode(output.read())
+
+        attachment = self.env['ir.attachment'].create({
+            'name': f'Lecturas_{self.name}.xlsx',
+            'type': 'binary',
+            'datas': xlsx_data,
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'res_model': self._name,
+            'res_id': self.id,
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'new',
+        }
+
     def action_close(self):
         self.ensure_one()
         self.state = 'closed'

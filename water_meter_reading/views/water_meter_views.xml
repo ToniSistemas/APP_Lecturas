@@ -36,12 +36,37 @@
     </field>
   </record>
 
-  <!-- Vista formulario: Contadores -->
+  <!-- Vista búsqueda: Contadores -->
+  <record id="view_water_meter_search" model="ir.ui.view">
+    <field name="name">water.meter.search</field>
+    <field name="model">water.meter</field>
+    <field name="arch" type="xml">
+      <search string="Buscar contadores">
+        <field name="name" string="Ruta"/>
+        <field name="meter_number" string="Contador"/>
+        <field name="owner_name" string="Nombre"/>
+        <field name="municipality" string="Municipio"/>
+        <separator/>
+        <filter string="Activos" name="active" domain="[('active','=',True)]" default="1"/>
+        <filter string="Archivados" name="archived" domain="[('active','=',False)]"/>
+        <filter string="Todos" name="all" domain="[('active','in',[True,False])]"/>
+      </search>
+    </field>
+  </record>
   <record id="view_water_meter_form" model="ir.ui.view">
     <field name="name">water.meter.form</field>
     <field name="model">water.meter</field>
     <field name="arch" type="xml">
       <form string="Contador">
+        <header>
+          <button name="action_archive" type="object"
+                  string="Archivar" class="btn btn-secondary"
+                  invisible="not active"
+                  confirm="¿Seguro que quieres archivar este contador? No aparecerá en nuevos períodos."/>
+          <button name="action_unarchive" type="object"
+                  string="Restaurar" class="btn btn-secondary"
+                  invisible="active"/>
+        </header>
         <sheet>
           <group string="Datos del contador">
             <group>

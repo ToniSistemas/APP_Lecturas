@@ -55,6 +55,9 @@
           <button name="action_generate_readings" type="object"
                   string="Generar lecturas" class="btn-primary"
                   invisible="state == 'closed'"/>
+          <button name="action_export_excel" type="object"
+                  string="Exportar Excel" class="btn btn-secondary"
+                  icon="fa-download"/>
           <button name="action_close" type="object"
                   string="Cerrar período"
                   invisible="state != 'open'"/>
