@@ -51,6 +51,9 @@
               <field name="subscriber"/>
               <field name="cadastral_ref"/>
               <field name="reversed_meter"/>
+              <field name="meter_max_value"
+                     invisible="not reversed_meter"
+                     required="reversed_meter"/>
             </group>
             <group>
               <field name="address"/>

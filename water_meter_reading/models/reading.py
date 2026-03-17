@@ -13,6 +13,8 @@ class WaterReading(models.Model):
     meter_owner_name = fields.Char(related='meter_id.owner_name', string='Nombre', store=True, readonly=True)
     meter_zip = fields.Char(related='meter_id.zip', string='C.P.', store=True, readonly=True)
     meter_municipality = fields.Char(related='meter_id.municipality', string='Municipio', store=True, readonly=True)
+    meter_reversed = fields.Boolean(related='meter_id.reversed_meter', string='Contador al revés', store=True, readonly=True)
+    meter_max_value = fields.Integer(related='meter_id.meter_max_value', string='Valor máximo', store=True, readonly=True)
     date = fields.Date(string='Fecha', required=True, default=fields.Date.context_today)
     reading_previous = fields.Integer(string='Lectura anterior')
     reading_current = fields.Integer(string='Lectura actual')
@@ -34,10 +36,14 @@ class WaterReading(models.Model):
         for rec in self:
             rec.allow_edit_previous = can_edit
 
-    @api.depends('reading_current', 'reading_previous')
+    @api.depends('reading_current', 'reading_previous', 'meter_reversed', 'meter_max_value')
     def _compute_difference(self):
         for rec in self:
-            rec.difference = rec.reading_current - rec.reading_previous
+            diff = rec.reading_current - rec.reading_previous
+            if rec.meter_reversed and diff < 0 and rec.meter_max_value > 0:
+                # Rollover: (max+1 - anterior) + actual
+                diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
+            rec.difference = diff
 
     @api.onchange('meter_id')
     def _onchange_meter_id(self):

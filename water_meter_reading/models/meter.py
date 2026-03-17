@@ -20,6 +20,12 @@ class WaterMeter(models.Model):
     subscriber = fields.Char(string='Abonado')
     cadastral_ref = fields.Char(string='Referencia catastral')
     reversed_meter = fields.Boolean(string='Contador al revés', default=False)
+    meter_max_value = fields.Integer(
+        string='Valor máximo del contador',
+        default=9999,
+        help='Valor en el que el contador da la vuelta (ej: 9999, 99999). '
+             'Solo se usa si «Contador al revés» está activo.',
+    )
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
 
