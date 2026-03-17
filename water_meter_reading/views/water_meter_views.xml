@@ -11,6 +11,7 @@
     <field name="name">Contadores</field>
     <field name="res_model">water.meter</field>
     <field name="view_mode">list,form</field>
+    <field name="context">{"search_default_active": 1}</field>
     <field name="help" type="html">
       <p class="o_view_nocontent_smiling_face">Crea tu primer contador</p>
     </field>
@@ -47,7 +48,7 @@
         <field name="owner_name" string="Nombre"/>
         <field name="municipality" string="Municipio"/>
         <separator/>
-        <filter string="Activos" name="active" domain="[('active','=',True)]" default="1"/>
+        <filter string="Activos" name="active" domain="[('active','=',True)]"/>
         <filter string="Archivados" name="archived" domain="[('active','=',False)]"/>
         <filter string="Todos" name="all" domain="[('active','in',[True,False])]"/>
       </search>
@@ -58,16 +59,9 @@
     <field name="model">water.meter</field>
     <field name="arch" type="xml">
       <form string="Contador">
-        <header>
-          <button name="action_archive" type="object"
-                  string="Archivar" class="btn btn-secondary"
-                  invisible="not active"
-                  confirm="¿Seguro que quieres archivar este contador? No aparecerá en nuevos períodos."/>
-          <button name="action_unarchive" type="object"
-                  string="Restaurar" class="btn btn-secondary"
-                  invisible="active"/>
-        </header>
         <sheet>
+          <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger"
+                  invisible="active"/>
           <group string="Datos del contador">
             <group>
               <field name="name"/>
