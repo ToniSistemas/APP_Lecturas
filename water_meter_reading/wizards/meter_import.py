@@ -69,8 +69,6 @@ class WaterMeterImport(models.TransientModel):
             order='year desc, trimester desc',
             limit=1,
         )
-        if not period:
-            raise UserError(_('Crea primero un período en borrador o abierto para guardar las lecturas anteriores.'))
 
         meters_to_create = []
         previous_readings = []
@@ -82,28 +80,33 @@ class WaterMeterImport(models.TransientModel):
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
-            if not values['name'] or not values['meter_number']:
-                raise ValidationError(_('Fila %s: Ruta y Contador son obligatorios.') % row_number)
+            if not values['name'] or not values['owner_name']:
+                raise ValidationError(_('Fila %s: Ruta y Nombre son obligatorios.') % row_number)
             if values['name'] in routes:
                 raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
                     row_number, values['name']))
-            if values['meter_number'] in meter_numbers:
+            if values['meter_number'] and values['meter_number'] in meter_numbers:
                 raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
                     row_number, values['meter_number']))
-            try:
-                previous_reading = int(values.pop('reading_previous'))
-            except (TypeError, ValueError) as error:
-                raise ValidationError(_('Fila %s: Lectura anterior debe ser un número entero.') % row_number) from error
-            if previous_reading < 0:
-                raise ValidationError(_('Fila %s: Lectura anterior no puede ser negativa.') % row_number)
+            previous_reading = values.pop('reading_previous')
+            if previous_reading:
+                try:
+                    previous_reading = int(previous_reading)
+                except (TypeError, ValueError) as error:
+                    raise ValidationError(_('Fila %s: Lectura anterior debe ser un número entero.') % row_number) from error
+                if previous_reading < 0:
+                    raise ValidationError(_('Fila %s: Lectura anterior no puede ser negativa.') % row_number)
+            else:
+                previous_reading = False
+            if not values['meter_number']:
+                values['meter_number'] = False
             routes.add(values['name'])
-            meter_numbers.add(values['meter_number'])
+            if values['meter_number']:
+                meter_numbers.add(values['meter_number'])
             meters_to_create.append(values)
             previous_readings.append(previous_reading)
 
-        existing_meters = self.env['water.meter'].search([
-            ('meter_number', 'in', list(meter_numbers)),
-        ])
+        existing_meters = self.env['water.meter'].search([('meter_number', 'in', list(meter_numbers))])
         if existing_meters:
             raise ValidationError(_('Ya existen estos contadores: %s') % ', '.join(existing_meters.mapped('meter_number')))
         existing_routes = self.env['water.meter'].search([
@@ -113,24 +116,33 @@ class WaterMeterImport(models.TransientModel):
             raise ValidationError(_('Ya existen estas rutas: %s') % ', '.join(existing_routes.mapped('name')))
 
         meters = self.env['water.meter'].with_context(skip_initial_reading=True).create(meters_to_create)
-        self.env['water.reading'].create([
-            {
-                'meter_id': meter.id,
-                'period_id': period.id,
-                'reading_previous': previous_reading,
-                'date': fields.Date.context_today(self),
-            }
-            for meter, previous_reading in zip(meters, previous_readings)
-        ])
-        if period.state == 'draft':
-            period.state = 'open'
+        readings = []
+        for meter, previous_reading in zip(meters, previous_readings):
+            if previous_reading is False:
+                continue
+            if period:
+                readings.append({
+                    'meter_id': meter.id,
+                    'period_id': period.id,
+                    'reading_previous': previous_reading,
+                    'date': fields.Date.context_today(self),
+                })
+            else:
+                readings.append({
+                    'meter_id': meter.id,
+                    'reading_previous': previous_reading,
+                    'reading_current': previous_reading,
+                    'date': fields.Date.context_today(self),
+                })
+        if readings:
+            self.env['water.reading'].create(readings)
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Importación completada'),
-                'message': _('%s contadores importados en el período %s.') % (len(meters), period.name),
+                'message': _('%s contadores importados.') % len(meters),
                 'type': 'success',
                 'sticky': False,
             },

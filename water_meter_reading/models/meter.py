@@ -12,7 +12,7 @@ class WaterMeter(models.Model):
     ]
 
     name = fields.Char(string='Ruta', required=True)
-    meter_number = fields.Char(string='Contador', required=True)
+    meter_number = fields.Char(string='Contador')
     active = fields.Boolean(string='Activo', default=True)
     address = fields.Char(string='Dirección')
     zip = fields.Char(string='C.P.')
