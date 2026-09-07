@@ -33,6 +33,8 @@ class WaterMeter(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
+        if self.env.context.get('skip_initial_reading'):
+            return records
         latest_period = self.env['water.period'].search(
             [('state', 'in', ('draft', 'open'))],
             order='year desc, trimester desc',
