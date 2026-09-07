@@ -25,4 +25,7 @@
     <field name="binding_model_id" ref="model_water_meter"/>
     <field name="binding_view_types">list</field>
   </record>
+
+  <menuitem id="menu_water_meter_import" name="Importar contadores"
+            parent="menu_water_root" action="action_water_meter_import" sequence="3"/>
 </odoo>
