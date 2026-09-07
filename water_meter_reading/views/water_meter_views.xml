@@ -125,7 +125,7 @@
         <field name="meter_zip" string="Código postal"/>
         <filter string="Diferencia negativa" name="negative_diff"
                 domain="[('difference','&lt;',0)]"/>
-        <group expand="0" string="Agrupar por">
+        <group>
           <filter string="Período" name="group_period"
                   context="{'group_by': 'period_id'}"/>
           <filter string="Municipio" name="group_municipality"
