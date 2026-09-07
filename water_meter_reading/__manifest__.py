@@ -15,10 +15,10 @@
     'data': [
         'security/groups.xml',
         'security/ir.model.access.csv',
-        'views/meter_import_views.xml',
         'views/res_users_views.xml',
         'views/water_meter_views.xml',
         'views/water_period_views.xml',
+        'views/meter_import_views.xml',
         'data/sequence_data.xml',
     ],
     'installable': True,
