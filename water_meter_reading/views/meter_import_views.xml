@@ -26,6 +26,13 @@
     <field name="binding_view_types">list</field>
   </record>
 
+  <record id="action_open_water_meter_import" model="ir.actions.server">
+    <field name="name">Importar contadores</field>
+    <field name="model_id" ref="model_water_meter"/>
+    <field name="state">code</field>
+    <field name="code">action = env['water.meter'].action_open_import()</field>
+  </record>
+
   <menuitem id="menu_water_meter_import" name="Importar contadores"
-            parent="menu_water_root" action="action_water_meter_import" sequence="3"/>
+            parent="menu_water_root" action="action_open_water_meter_import" sequence="3"/>
 </odoo>

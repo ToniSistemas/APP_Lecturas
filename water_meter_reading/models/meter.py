@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
 
 
 class WaterMeter(models.Model):
@@ -29,6 +29,15 @@ class WaterMeter(models.Model):
     )
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
+
+    def action_open_import(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Importar contadores'),
+            'res_model': 'water.meter.import',
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
     @api.model_create_multi
     def create(self, vals_list):
