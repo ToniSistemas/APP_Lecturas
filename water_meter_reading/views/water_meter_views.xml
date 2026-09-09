@@ -27,13 +27,14 @@
     <field name="model">water.meter</field>
     <field name="arch" type="xml">
       <list string="Contadores">
-        <field name="name"/>
-        <field name="meter_number"/>
-        <field name="owner_name"/>
-        <field name="subscriber" optional="hide"/>
+        <field name="name" optional="show"/>
+        <field name="meter_number" optional="show"/>
+        <field name="owner_name" optional="show"/>
+        <field name="subscriber" optional="show"/>
         <field name="meter_type" optional="show"/>
-        <field name="address"/>
-        <field name="municipality"/>
+        <field name="address" optional="show"/>
+        <field name="zip" optional="show"/>
+        <field name="municipality" optional="show"/>
       </list>
     </field>
   </record>
