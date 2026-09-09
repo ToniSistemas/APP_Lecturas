@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="water_meter_reading.CameraImageField"
+     t-inherit="web.ImageField" t-inherit-mode="primary">
+    <xpath expr="//FileUploader" position="after">
+      <t t-if="isMobile">
+        <button type="button"
+                class="o_camera_file_button btn btn-light border-0 rounded-circle m-1 p-1"
+                data-tooltip="Tomar foto" aria-label="Tomar foto"
+                t-on-click.stop.prevent="onCameraClick">
+          <i class="fa fa-camera fa-fw"/>
+        </button>
+        <input type="file" class="d-none" t-ref="cameraInput"
+               accept="image/*" capture="environment"
+               t-on-change="onCameraFileChange"/>
+      </t>
+    </xpath>
+  </t>
+</templates>

@@ -118,7 +118,7 @@
                       <field name="meter_max_value" string="Valor máximo"
                         invisible="not meter_reversed" required="meter_reversed" optional="show"/>
                   <field name="observations"/>
-                      <field name="counter_photo" widget="image" string="Foto"
+                          <field name="counter_photo" widget="camera_image" string="Foto"
                         options="{&quot;size&quot;: [64, 64]}"/>
                 </list>
               </field>
