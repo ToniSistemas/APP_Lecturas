@@ -109,6 +109,14 @@
                   <field name="reading_previous" readonly="not allow_edit_previous"/>
                   <field name="reading_current"/>
                   <field name="difference" readonly="1"/>
+                      <field name="new_meter" string="Contador nuevo" optional="show"/>
+                      <field name="previous_meter_number" string="Contador anterior"
+                        readonly="1" optional="hide"/>
+                      <field name="new_meter_number" string="Nuevo contador"
+                        invisible="not new_meter" required="new_meter" optional="show"/>
+                      <field name="meter_reversed" string="Contador al revés" optional="show"/>
+                      <field name="meter_max_value" string="Valor máximo"
+                        invisible="not meter_reversed" required="meter_reversed" optional="show"/>
                   <field name="observations"/>
                   <field name="counter_photo" widget="camera_image" string="Foto" options="{&quot;size&quot;: [64, 64]}"/>
                 </list>

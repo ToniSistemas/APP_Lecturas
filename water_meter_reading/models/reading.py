@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class WaterReading(models.Model):
@@ -8,13 +9,24 @@ class WaterReading(models.Model):
 
     name = fields.Char(string='Referencia', readonly=True, copy=False)
     meter_id = fields.Many2one('water.meter', string='Contador', required=True, ondelete='cascade')
-    meter_number = fields.Char(related='meter_id.meter_number', string='Contador Nº', store=True, readonly=True)
+    meter_number = fields.Char(string='Contador Nº', readonly=True)
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
     meter_owner_name = fields.Char(related='meter_id.owner_name', string='Nombre', store=True, readonly=True)
     meter_zip = fields.Char(related='meter_id.zip', string='C.P.', store=True, readonly=True)
     meter_municipality = fields.Char(related='meter_id.municipality', string='Municipio', store=True, readonly=True)
-    meter_reversed = fields.Boolean(related='meter_id.reversed_meter', string='Contador al revés', store=True, readonly=True)
-    meter_max_value = fields.Integer(related='meter_id.meter_max_value', string='Valor máximo', store=True, readonly=True)
+    new_meter = fields.Boolean(string='Contador nuevo', default=False)
+    previous_meter_number = fields.Char(string='Contador anterior', readonly=True)
+    new_meter_number = fields.Char(string='Nuevo contador')
+    meter_reversed = fields.Boolean(
+        string='Contador dio la vuelta',
+        default=False,
+        help='Márcalo solo en el período en el que el contador pasa por cero.',
+    )
+    meter_max_value = fields.Integer(
+        string='Valor máximo',
+        default=9999,
+        help='Último valor antes de volver a cero. Por ejemplo, 999 para pasar de 980 a 10.',
+    )
     date = fields.Date(string='Fecha', required=True, default=fields.Date.context_today)
     reading_previous = fields.Integer(string='Lectura anterior')
     reading_current = fields.Integer(string='Lectura actual')
@@ -44,6 +56,55 @@ class WaterReading(models.Model):
                 # Rollover: (max+1 - anterior) + actual
                 diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
             rec.difference = diff
+
+    @api.onchange('new_meter')
+    def _onchange_new_meter(self):
+        if self.new_meter:
+            self.previous_meter_number = self.meter_id.meter_number
+        else:
+            self.previous_meter_number = False
+            self.new_meter_number = False
+
+    @api.constrains('new_meter', 'new_meter_number')
+    def _check_new_meter_number(self):
+        for rec in self:
+            if rec.new_meter and not rec.new_meter_number:
+                raise ValidationError(_('Debes indicar el número del contador nuevo.'))
+
+    @api.constrains('meter_reversed', 'meter_max_value', 'reading_previous', 'reading_current')
+    def _check_reversed_meter_range(self):
+        for rec in self:
+            if not rec.meter_reversed:
+                continue
+            if rec.meter_max_value <= 0:
+                raise ValidationError(_('El valor máximo del contador debe ser mayor que cero.'))
+            if rec.reading_previous > rec.meter_max_value or rec.reading_current > rec.meter_max_value:
+                raise ValidationError(
+                    _('Las lecturas no pueden superar el valor máximo del contador.')
+                )
+
+    def _apply_meter_replacement(self):
+        for rec in self.filtered(lambda reading: reading.new_meter and reading.new_meter_number):
+            new_number = rec.new_meter_number.strip()
+            if new_number != rec.meter_id.meter_number:
+                number_owner = self.env['water.meter'].with_context(active_test=False).search([
+                    ('meter_number', '=', new_number),
+                    ('id', '!=', rec.meter_id.id),
+                ], limit=1)
+                if number_owner:
+                    raise ValidationError(
+                        _('El contador %(meter)s ya pertenece al abonado %(subscriber)s.') % {
+                            'meter': new_number,
+                            'subscriber': number_owner.subscriber or '-',
+                        }
+                    )
+                old_number = rec.meter_id.meter_number
+                rec.with_context(skip_meter_replacement=True).write({
+                    'previous_meter_number': rec.previous_meter_number or old_number,
+                    'meter_number': new_number,
+                    'new_meter_number': new_number,
+                })
+                rec.meter_id.write({'meter_number': new_number})
 
     @api.onchange('meter_id', 'period_id')
     def _onchange_meter_id(self):
@@ -78,6 +139,8 @@ class WaterReading(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if vals.get('meter_id') and not vals.get('meter_number'):
+                vals['meter_number'] = self.env['water.meter'].browse(vals['meter_id']).meter_number
             if vals.get('meter_id') and 'reading_previous' not in vals:
                 prev_value = 0
                 period_id = vals.get('period_id')
@@ -106,4 +169,14 @@ class WaterReading(models.Model):
                 vals['reading_previous'] = prev_value
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('water.reading') or '/'
-        return super().create(vals_list)
+        records = super().create(vals_list)
+        records._apply_meter_replacement()
+        return records
+
+    def write(self, vals):
+        result = super().write(vals)
+        if not self.env.context.get('skip_meter_replacement') and {
+            'new_meter', 'new_meter_number'
+        } & set(vals):
+            self._apply_meter_replacement()
+        return result

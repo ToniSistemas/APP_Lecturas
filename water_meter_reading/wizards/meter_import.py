@@ -26,11 +26,10 @@ class WaterMeterImport(models.TransientModel):
         'Dirección': 'address',
         'C.P.': 'zip',
         'Municipio': 'municipality',
-        'Contador nuevo': 'new_meter',
         'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
     }
-    _required_headers = {'Ruta', 'Contador', 'Nombre'}
+    _required_headers = {'Ruta', 'Contador', 'Nombre', 'Abonado'}
 
     _meter_types = {
         'DOM': 'dom',
@@ -51,18 +50,6 @@ class WaterMeterImport(models.TransientModel):
         return ''.join(
             character for character in unicodedata.normalize('NFKD', text)
             if not unicodedata.combining(character)
-        )
-
-    def _parse_boolean(self, value, row_number):
-        normalized = value.strip().lower()
-        if not normalized:
-            return False
-        if normalized in ('1', 'sí', 'si', 'true', 'verdadero', 'x'):
-            return True
-        if normalized in ('0', 'no', 'false', 'falso'):
-            return False
-        raise ValidationError(
-            _('Fila %s: Contador nuevo debe indicar Sí/No, True/False o 1/0.') % row_number
         )
 
     def _read_rows(self):
@@ -131,6 +118,7 @@ class WaterMeterImport(models.TransientModel):
         }
         imported_rows = []
         meter_numbers = set()
+        subscribers = set()
         routes = set()
         for row_number, row in enumerate(normalized_rows, start=2):
             values = {
@@ -142,16 +130,22 @@ class WaterMeterImport(models.TransientModel):
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
-            if not values['name'] or not values['meter_number'] or not values['owner_name']:
-                raise ValidationError(_('Fila %s: Ruta, Contador y Nombre son obligatorios.') % row_number)
+            if (
+                not values['name'] or not values['meter_number']
+                or not values['owner_name'] or not values['subscriber']
+            ):
+                raise ValidationError(
+                    _('Fila %s: Ruta, Contador, Nombre y Abonado son obligatorios.') % row_number
+                )
             if values['name'] in routes:
                 raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
                     row_number, values['name']))
             if values['meter_number'] in meter_numbers:
                 raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
                     row_number, values['meter_number']))
-            if 'new_meter' in values:
-                values['new_meter'] = self._parse_boolean(values['new_meter'], row_number)
+            if values['subscriber'] in subscribers:
+                raise ValidationError(_('Fila %s: el abonado %s está repetido en el archivo.') % (
+                    row_number, values['subscriber']))
             if 'meter_type' in values:
                 meter_type = values['meter_type'].upper()
                 if meter_type and meter_type not in self._meter_types:
@@ -171,17 +165,40 @@ class WaterMeterImport(models.TransientModel):
                 previous_reading = False
             routes.add(values['name'])
             meter_numbers.add(values['meter_number'])
+            subscribers.add(values['subscriber'])
             imported_rows.append((values, previous_reading))
 
         Meter = self.env['water.meter'].with_context(active_test=False)
-        existing_by_number = {
-            meter.meter_number: meter
-            for meter in Meter.search([('meter_number', 'in', list(meter_numbers))])
+        existing_meters = Meter.search([('subscriber', 'in', list(subscribers))])
+        duplicate_subscribers = {
+            subscriber
+            for subscriber in subscribers
+            if len(existing_meters.filtered(lambda meter: meter.subscriber == subscriber)) > 1
         }
+        if duplicate_subscribers:
+            raise ValidationError(
+                _('Hay varios contadores guardados para estos abonados: %s')
+                % ', '.join(sorted(duplicate_subscribers))
+            )
+        existing_by_subscriber = {meter.subscriber: meter for meter in existing_meters}
         existing_by_route = {
             meter.name: meter
             for meter in Meter.search([('name', 'in', list(routes))])
         }
+        existing_by_number = {
+            meter.meter_number: meter
+            for meter in Meter.search([('meter_number', 'in', list(meter_numbers))])
+        }
+        for values, _previous_reading in imported_rows:
+            subscriber_meter = existing_by_subscriber.get(values['subscriber'])
+            number_owner = existing_by_number.get(values['meter_number'])
+            if number_owner and number_owner != subscriber_meter:
+                raise ValidationError(
+                    _('El contador %(meter)s ya pertenece al abonado %(subscriber)s.') % {
+                        'meter': values['meter_number'],
+                        'subscriber': number_owner.subscriber or '-',
+                    }
+                )
 
         previous_period = self.period_id._get_previous_period()
         previous_by_meter = {}
@@ -190,12 +207,12 @@ class WaterMeterImport(models.TransientModel):
                 reading.meter_id.id: reading.reading_current
                 for reading in self.env['water.reading'].search([
                     ('period_id', '=', previous_period.id),
-                    ('meter_id', 'in', [meter.id for meter in existing_by_number.values()]),
+                    ('meter_id', 'in', existing_meters.ids),
                 ])
             }
         mismatches = []
         for values, imported_previous in imported_rows:
-            meter = existing_by_number.get(values['meter_number'])
+            meter = existing_by_subscriber.get(values['subscriber'])
             if not meter or imported_previous is False or meter.id not in previous_by_meter:
                 continue
             stored_current = previous_by_meter[meter.id]
@@ -228,7 +245,7 @@ class WaterMeterImport(models.TransientModel):
         created_count = 0
         updated_count = 0
         for values, previous_reading in imported_rows:
-            meter = existing_by_number.get(values['meter_number'])
+            meter = existing_by_subscriber.get(values['subscriber'])
             route_owner = existing_by_route.get(values['name'])
             if route_owner and route_owner != meter:
                 raise ValidationError(
@@ -238,6 +255,8 @@ class WaterMeterImport(models.TransientModel):
                     }
                 )
             if meter:
+                previous_meter_number = meter.meter_number
+                number_changed = values['meter_number'] != previous_meter_number
                 update_values = dict(values, active=True)
                 changed_values = {
                     field: value
@@ -249,30 +268,44 @@ class WaterMeterImport(models.TransientModel):
                     updated_count += 1
             else:
                 meter = Meter.with_context(skip_initial_reading=True).create(dict(values, active=True))
-                existing_by_number[meter.meter_number] = meter
+                previous_meter_number = False
+                number_changed = False
+                existing_by_subscriber[meter.subscriber] = meter
                 existing_by_route[meter.name] = meter
                 created_count += 1
-            meters.append((meter, previous_reading))
+            meter_event = {
+                'new_meter': number_changed,
+                'previous_meter_number': previous_meter_number if number_changed else False,
+                'new_meter_number': meter.meter_number if number_changed else False,
+                'meter_number': meter.meter_number,
+            }
+            meters.append((meter, previous_reading, meter_event))
 
         Reading = self.env['water.reading']
         readings_by_meter = {
             reading.meter_id.id: reading
             for reading in Reading.search([
                 ('period_id', '=', self.period_id.id),
-                ('meter_id', 'in', [meter.id for meter, _previous in meters]),
+                ('meter_id', 'in', [meter.id for meter, _previous, _event in meters]),
             ])
         }
         reading_count = 0
-        for meter, previous_reading in meters:
+        for meter, previous_reading, meter_event in meters:
             reading = readings_by_meter.get(meter.id)
             if reading:
+                reading_values = {}
                 if previous_reading is not False and reading.reading_previous != previous_reading:
-                    reading.reading_previous = previous_reading
+                    reading_values['reading_previous'] = previous_reading
+                if meter_event['new_meter']:
+                    reading_values.update(meter_event)
+                if reading_values:
+                    reading.with_context(skip_meter_replacement=True).write(reading_values)
                 continue
             reading_values = {
                 'meter_id': meter.id,
                 'period_id': self.period_id.id,
                 'date': fields.Date.context_today(self),
+                **meter_event,
             }
             if previous_reading is not False:
                 reading_values['reading_previous'] = previous_reading

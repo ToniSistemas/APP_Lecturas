@@ -32,10 +32,8 @@
         <field name="owner_name"/>
         <field name="subscriber" optional="hide"/>
         <field name="meter_type" optional="show"/>
-        <field name="new_meter" optional="hide"/>
         <field name="address"/>
         <field name="municipality"/>
-        <field name="reversed_meter" optional="hide"/>
       </list>
     </field>
   </record>
@@ -70,14 +68,9 @@
               <field name="name"/>
               <field name="meter_number" required="1"/>
               <field name="owner_name"/>
-              <field name="subscriber"/>
+              <field name="subscriber" required="1"/>
               <field name="cadastral_ref"/>
               <field name="meter_type"/>
-              <field name="new_meter"/>
-              <field name="reversed_meter"/>
-              <field name="meter_max_value"
-                     invisible="not reversed_meter"
-                     required="reversed_meter"/>
             </group>
             <group>
               <field name="address"/>
@@ -95,6 +88,11 @@
                   <field name="reading_previous" readonly="not allow_edit_previous"/>
                   <field name="reading_current"/>
                   <field name="difference" readonly="1"/>
+                  <field name="new_meter" optional="show"/>
+                  <field name="previous_meter_number" optional="hide"/>
+                  <field name="new_meter_number" optional="hide"/>
+                  <field name="meter_reversed" optional="show"/>
+                  <field name="meter_max_value" optional="hide"/>
                   <field name="observations"/>
                       <field name="counter_photo" widget="image" string="Foto" readonly="1"
                         options="{'size': [64, 64], 'zoom': true}"/>
@@ -191,6 +189,12 @@
               <field name="reading_previous" readonly="not allow_edit_previous"/>
               <field name="reading_current"/>
               <field name="difference" readonly="1"/>
+              <field name="new_meter"/>
+              <field name="previous_meter_number" invisible="not new_meter"/>
+              <field name="new_meter_number" invisible="not new_meter" required="new_meter"/>
+              <field name="meter_reversed" string="Contador al revés"/>
+              <field name="meter_max_value"
+                     invisible="not meter_reversed" required="meter_reversed"/>
             </group>
           </group>
           <field name="allow_edit_previous" invisible="1"/>

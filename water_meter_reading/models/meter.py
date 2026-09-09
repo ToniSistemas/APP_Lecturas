@@ -21,21 +21,12 @@ class WaterMeter(models.Model):
     owner_name = fields.Char(string='Nombre', tracking=True)
     subscriber = fields.Char(string='Abonado', tracking=True)
     cadastral_ref = fields.Char(string='Referencia catastral', tracking=True)
-    new_meter = fields.Boolean(string='Contador nuevo', default=False, tracking=True)
     meter_type = fields.Selection([
         ('dom', 'DOM - Doméstico'),
         ('asim', 'ASIM - Asimilado'),
         ('ndom', 'NDOM - No doméstico'),
         ('esp', 'ESP - Especial'),
     ], string='Tipo de contador', tracking=True)
-    reversed_meter = fields.Boolean(string='Contador al revés', default=False, tracking=True)
-    meter_max_value = fields.Integer(
-        string='Valor máximo del contador',
-        default=9999,
-        tracking=True,
-        help='Valor en el que el contador da la vuelta (ej: 9999, 99999). '
-             'Solo se usa si «Contador al revés» está activo.',
-    )
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
 
