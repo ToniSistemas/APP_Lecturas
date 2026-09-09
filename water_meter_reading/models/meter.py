@@ -63,6 +63,3 @@ class WaterMeter(models.Model):
                 })
         return records
 
-    def _compute_display_name(self):
-        for rec in self:
-            rec.display_name = rec.meter_number or rec.name or ''
