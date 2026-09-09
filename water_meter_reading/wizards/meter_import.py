@@ -1,6 +1,7 @@
 import base64
 import csv
 import io
+import unicodedata
 
 from odoo import _, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -41,6 +42,14 @@ class WaterMeterImport(models.TransientModel):
         'ESPECIAL': 'esp',
     }
 
+    @staticmethod
+    def _normalize_header(value):
+        text = ''.join(str(value or '').replace('\xa0', ' ').split()).casefold()
+        return ''.join(
+            character for character in unicodedata.normalize('NFKD', text)
+            if not unicodedata.combining(character)
+        )
+
     def _parse_boolean(self, value, row_number):
         normalized = value.strip().lower()
         if not normalized:
@@ -71,7 +80,7 @@ class WaterMeterImport(models.TransientModel):
             headers = next(rows, None)
             if not headers:
                 return []
-            headers = [str(header).strip() if header is not None else '' for header in headers]
+            headers = [self._normalize_header(header) for header in headers]
             return [
                 dict(zip(headers, values))
                 for values in rows
@@ -85,11 +94,15 @@ class WaterMeterImport(models.TransientModel):
         if not rows:
             raise UserError(_('El archivo no contiene contadores para importar.'))
 
-        headers = {str(header).strip() for header in rows[0]}
-        missing_headers = self._required_headers - headers
+        normalized_rows = [
+            {self._normalize_header(header): value for header, value in row.items()}
+            for row in rows
+        ]
+        required_headers = {self._normalize_header(header) for header in self._required_headers}
+        missing_headers = required_headers - set(normalized_rows[0])
         if missing_headers:
             raise ValidationError(
-                _('Faltan columnas obligatorias: %s') % ', '.join(sorted(missing_headers))
+                _('Faltan columnas obligatorias: %s') % ', '.join(sorted(missing_headers)).title()
             )
 
         period = self.env['water.period'].search(
@@ -102,8 +115,11 @@ class WaterMeterImport(models.TransientModel):
         previous_readings = []
         meter_numbers = set()
         routes = set()
-        for row_number, row in enumerate(rows, start=2):
-            values = {field: row.get(header, '') for header, field in self._column_fields.items()}
+        for row_number, row in enumerate(normalized_rows, start=2):
+            values = {
+                field: row.get(self._normalize_header(header), '')
+                for header, field in self._column_fields.items()
+            }
             values = {
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
