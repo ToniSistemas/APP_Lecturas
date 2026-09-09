@@ -13,7 +13,7 @@ class WaterMeterImport(models.TransientModel):
     file = fields.Binary(string='Archivo', required=True)
     filename = fields.Char(string='Nombre del archivo')
 
-    _required_headers = {
+    _column_fields = {
         'Ruta': 'name',
         'Contador': 'meter_number',
         'Nombre': 'owner_name',
@@ -24,6 +24,7 @@ class WaterMeterImport(models.TransientModel):
         'Municipio': 'municipality',
         'Lectura anterior': 'reading_previous',
     }
+    _required_headers = {'Ruta', 'Nombre'}
 
     def _read_rows(self):
         self.ensure_one()
@@ -58,7 +59,7 @@ class WaterMeterImport(models.TransientModel):
             raise UserError(_('El archivo no contiene contadores para importar.'))
 
         headers = {str(header).strip() for header in rows[0]}
-        missing_headers = set(self._required_headers) - headers
+        missing_headers = self._required_headers - headers
         if missing_headers:
             raise ValidationError(
                 _('Faltan columnas obligatorias: %s') % ', '.join(sorted(missing_headers))
@@ -75,7 +76,7 @@ class WaterMeterImport(models.TransientModel):
         meter_numbers = set()
         routes = set()
         for row_number, row in enumerate(rows, start=2):
-            values = {field: row.get(header, '') for header, field in self._required_headers.items()}
+            values = {field: row.get(header, '') for header, field in self._column_fields.items()}
             values = {
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
