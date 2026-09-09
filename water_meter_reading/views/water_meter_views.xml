@@ -4,6 +4,7 @@
   <record id="menu_water_root" model="ir.ui.menu">
     <field name="name">Lecturas Agua</field>
     <field name="sequence">10</field>
+    <field name="web_icon">water_meter_reading,static/description/icon.png</field>
   </record>
 
   <!-- Acción: Contadores -->
