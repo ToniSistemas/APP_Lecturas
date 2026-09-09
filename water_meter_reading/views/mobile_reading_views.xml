@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_reading_mobile_form" model="ir.ui.view">
+    <field name="name">water.reading.mobile.form</field>
+    <field name="model">water.reading</field>
+    <field name="arch" type="xml">
+      <form string="Lectura móvil" class="o_water_mobile_reading">
+        <header>
+          <button name="action_mobile_previous" type="object" string="Anterior"
+                  icon="fa-chevron-left" class="btn-secondary"/>
+          <button name="action_mobile_next" type="object" string="Guardar y siguiente"
+                  icon="fa-chevron-right" class="btn-primary"/>
+        </header>
+        <sheet>
+          <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"
+                  invisible="reading_current != 0"/>
+          <field name="allow_edit_previous" invisible="1"/>
+          <div class="o_water_mobile_heading">
+            <div class="oe_title">
+              <h1><field name="meter_number" readonly="1" nolabel="1"/></h1>
+            </div>
+            <field name="mobile_progress" readonly="1" nolabel="1"
+                   class="o_water_mobile_progress"/>
+          </div>
+
+          <group string="Ubicación" class="o_water_mobile_location">
+            <group>
+              <field name="meter_id" readonly="1"/>
+              <field name="meter_owner_name" readonly="1"/>
+              <field name="meter_subscriber" readonly="1"/>
+            </group>
+            <group>
+              <field name="meter_route" readonly="1"/>
+              <field name="meter_address" readonly="1"/>
+              <field name="meter_municipality" readonly="1"/>
+            </group>
+          </group>
+
+          <div class="o_water_mobile_capture">
+            <div class="o_water_mobile_values">
+              <label for="reading_previous"/>
+              <field name="reading_previous" readonly="not allow_edit_previous"/>
+              <label for="reading_current"/>
+              <field name="reading_current" class="o_water_mobile_current"/>
+              <label for="difference"/>
+              <field name="difference" readonly="1"/>
+            </div>
+            <field name="counter_photo" widget="camera_image" nolabel="1"
+                   class="o_water_mobile_photo" options="{'size': [240, 240]}"/>
+          </div>
+
+          <group string="Incidencias del contador">
+            <group>
+              <field name="new_meter"/>
+              <field name="previous_meter_number" invisible="not new_meter"/>
+              <field name="new_meter_number" invisible="not new_meter" required="new_meter"/>
+            </group>
+            <group>
+              <field name="meter_reversed" string="Contador dio la vuelta"/>
+              <field name="meter_max_value"
+                     invisible="not meter_reversed" required="meter_reversed"/>
+            </group>
+          </group>
+
+          <group string="Observaciones">
+            <field name="observations" nolabel="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

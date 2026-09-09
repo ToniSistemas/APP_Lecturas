@@ -63,6 +63,23 @@ class WaterPeriod(models.Model):
             'context': {'default_period_id': self.id},
         }
 
+    def action_start_mobile_readings(self):
+        self.ensure_one()
+        if not self.reading_ids:
+            raise UserError(_('Importa primero el censo de contadores del período.'))
+        first_reading = self.env['water.reading'].search(
+            [('period_id', '=', self.id), ('reading_current', '=', 0)],
+            order='meter_route, id',
+            limit=1,
+        )
+        if not first_reading:
+            first_reading = self.env['water.reading'].search(
+                [('period_id', '=', self.id)],
+                order='meter_route, id',
+                limit=1,
+            )
+        return first_reading._mobile_action()
+
     def action_generate_readings(self):
         self.ensure_one()
         if self.state == 'closed':

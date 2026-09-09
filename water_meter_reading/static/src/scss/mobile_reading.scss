@@ -1,0 +1,62 @@
+.o_water_mobile_reading {
+    .o_form_sheet {
+        max-width: 760px;
+    }
+
+    .o_water_mobile_heading {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .o_water_mobile_progress {
+        font-size: 1.125rem;
+        font-weight: 700;
+    }
+
+    .o_water_mobile_capture {
+        align-items: center;
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: minmax(0, 1fr) 240px;
+        margin: 1.5rem 0;
+    }
+
+    .o_water_mobile_values {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: minmax(8rem, auto) minmax(8rem, 1fr);
+    }
+
+    .o_water_mobile_current input {
+        font-size: 2rem;
+        font-weight: 700;
+        min-height: 3.5rem;
+        text-align: right;
+    }
+
+    .o_water_mobile_photo img {
+        height: 240px;
+        object-fit: contain;
+        width: 240px;
+    }
+
+    @media (max-width: 767px) {
+        .o_form_sheet {
+            padding: 0.75rem;
+        }
+
+        .o_water_mobile_capture {
+            grid-template-columns: 1fr;
+        }
+
+        .o_water_mobile_photo,
+        .o_water_mobile_photo > div,
+        .o_water_mobile_photo img {
+            height: auto;
+            max-width: 100%;
+            width: 100%;
+        }
+    }
+}

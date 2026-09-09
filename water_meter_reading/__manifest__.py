@@ -1,6 +1,6 @@
 {
     'name': 'Water Meter Readings',
-    'version': '19.0.3.3.0',
+    'version': '19.0.4.0.0',
     'summary': 'Registro de lecturas de contadores de agua',
     'category': 'Tools',
     'author': 'Toni',
@@ -11,6 +11,7 @@
         'web.assets_backend': [
             'water_meter_reading/static/src/js/camera_image_field.js',
             'water_meter_reading/static/src/xml/camera_image_field.xml',
+            'water_meter_reading/static/src/scss/mobile_reading.scss',
         ],
     },
     'data': [
@@ -18,6 +19,7 @@
         'security/ir.model.access.csv',
         'views/res_users_views.xml',
         'views/water_meter_views.xml',
+        'views/mobile_reading_views.xml',
         'views/water_period_views.xml',
         'views/meter_import_views.xml',
         'data/sequence_data.xml',

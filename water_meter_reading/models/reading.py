@@ -12,6 +12,8 @@ class WaterReading(models.Model):
     meter_number = fields.Char(string='Contador Nº', readonly=True)
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
     meter_owner_name = fields.Char(related='meter_id.owner_name', string='Nombre', store=True, readonly=True)
+    meter_subscriber = fields.Char(related='meter_id.subscriber', string='Abonado', readonly=True)
+    meter_address = fields.Char(related='meter_id.address', string='Dirección', readonly=True)
     meter_zip = fields.Char(related='meter_id.zip', string='C.P.', store=True, readonly=True)
     meter_municipality = fields.Char(related='meter_id.municipality', string='Municipio', store=True, readonly=True)
     new_meter = fields.Boolean(string='Contador nuevo', default=False)
@@ -40,6 +42,22 @@ class WaterReading(models.Model):
         compute='_compute_allow_edit_previous',
         string='Puede editar lectura anterior',
     )
+    mobile_progress = fields.Char(compute='_compute_mobile_progress', string='Progreso')
+
+    @api.depends('period_id', 'period_id.reading_ids')
+    def _compute_mobile_progress(self):
+        for rec in self:
+            if not rec.period_id:
+                rec.mobile_progress = ''
+                continue
+            ordered_ids = rec.period_id.reading_ids.sorted(
+                key=lambda reading: (reading.meter_route or '', reading.id)
+            ).ids
+            position = ordered_ids.index(rec.id) + 1 if rec.id in ordered_ids else 0
+            rec.mobile_progress = _('%(position)s de %(total)s') % {
+                'position': position,
+                'total': len(ordered_ids),
+            }
 
     @api.depends_context('uid')
     def _compute_allow_edit_previous(self):
@@ -105,6 +123,46 @@ class WaterReading(models.Model):
                     'new_meter_number': new_number,
                 })
                 rec.meter_id.write({'meter_number': new_number})
+
+    def _mobile_action(self):
+        self.ensure_one()
+        view = self.env.ref('water_meter_reading.view_water_reading_mobile_form')
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Lectura de contador'),
+            'res_model': self._name,
+            'res_id': self.id,
+            'views': [(view.id, 'form')],
+            'target': 'current',
+            'context': {'form_view_initial_mode': 'edit'},
+        }
+
+    def _mobile_adjacent_action(self, offset):
+        self.ensure_one()
+        readings = self.search(
+            [('period_id', '=', self.period_id.id)],
+            order='meter_route, id',
+        )
+        position = readings.ids.index(self.id)
+        next_position = position + offset
+        if 0 <= next_position < len(readings):
+            return readings[next_position]._mobile_action()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Recorrido completado') if offset > 0 else _('Primera lectura'),
+                'message': _('No hay más lecturas en esa dirección.'),
+                'type': 'success' if offset > 0 else 'info',
+                'sticky': False,
+            },
+        }
+
+    def action_mobile_previous(self):
+        return self._mobile_adjacent_action(-1)
+
+    def action_mobile_next(self):
+        return self._mobile_adjacent_action(1)
 
     @api.onchange('meter_id', 'period_id')
     def _onchange_meter_id(self):

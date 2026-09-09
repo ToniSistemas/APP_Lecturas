@@ -55,6 +55,9 @@
           <button name="action_open_meter_import" type="object"
               string="Importar censo" class="btn-secondary"
               icon="fa-upload" invisible="state == 'closed'"/>
+          <button name="action_start_mobile_readings" type="object"
+                  string="Modo lectura móvil" class="btn-primary"
+                  icon="fa-mobile" invisible="not reading_ids"/>
           <button name="action_export_excel" type="object"
                   string="Exportar Excel" class="btn btn-secondary"
                   icon="fa-download"/>
