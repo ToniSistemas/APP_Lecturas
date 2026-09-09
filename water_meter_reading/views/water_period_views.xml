@@ -98,9 +98,9 @@
               </div>
               <field name="reading_ids">
                 <list string="Lecturas" editable="bottom"
-                      decoration-danger="difference &lt; 0">
+                    decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
-                  <field name="meter_number" string="Contador" readonly="1"/>
+                  <field name="meter_id" string="Contador" readonly="1"/>
                   <field name="meter_route" string="Ruta" readonly="1" optional="show"/>
                   <field name="meter_owner_name" string="Nombre" readonly="1" optional="show"/>
                   <field name="meter_municipality" string="Municipio" readonly="1" optional="show"/>

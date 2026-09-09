@@ -128,6 +128,8 @@
         <field name="meter_owner_name" string="Nombre"/>
         <field name="meter_municipality" string="Municipio"/>
         <field name="meter_zip" string="Código postal"/>
+        <filter string="Sin lectura actual" name="missing_current_reading"
+          domain="[('reading_current','=',0)]"/>
         <filter string="Diferencia negativa" name="negative_diff"
                 domain="[('difference','&lt;',0)]"/>
         <group>
