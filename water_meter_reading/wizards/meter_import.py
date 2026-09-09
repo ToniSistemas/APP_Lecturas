@@ -14,6 +14,8 @@ class WaterMeterImport(models.TransientModel):
     file = fields.Binary(string='Archivo', required=True)
     filename = fields.Char(string='Nombre del archivo')
     period_id = fields.Many2one('water.period', string='Período', required=True)
+    confirmation_required = fields.Boolean(readonly=True)
+    warning_message = fields.Text(string='Lecturas diferentes', readonly=True)
 
     _column_fields = {
         'Ruta': 'name',
@@ -88,6 +90,20 @@ class WaterMeterImport(models.TransientModel):
                 if any(value not in (None, '') for value in values)
             ]
         raise UserError(_('El archivo debe tener formato CSV o XLSX.'))
+
+    def _confirmation_action(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Confirmar importación del censo'),
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_import_confirmed(self):
+        self.ensure_one()
+        return self.with_context(confirm_reading_mismatches=True).action_import()
 
     def action_import(self):
         self.ensure_one()
@@ -166,6 +182,47 @@ class WaterMeterImport(models.TransientModel):
             meter.name: meter
             for meter in Meter.search([('name', 'in', list(routes))])
         }
+
+        previous_period = self.period_id._get_previous_period()
+        previous_by_meter = {}
+        if previous_period:
+            previous_by_meter = {
+                reading.meter_id.id: reading.reading_current
+                for reading in self.env['water.reading'].search([
+                    ('period_id', '=', previous_period.id),
+                    ('meter_id', 'in', [meter.id for meter in existing_by_number.values()]),
+                ])
+            }
+        mismatches = []
+        for values, imported_previous in imported_rows:
+            meter = existing_by_number.get(values['meter_number'])
+            if not meter or imported_previous is False or meter.id not in previous_by_meter:
+                continue
+            stored_current = previous_by_meter[meter.id]
+            if imported_previous != stored_current:
+                mismatches.append(
+                    _('%(meter)s (%(subscriber)s): guardada %(stored)s, Excel %(imported)s') % {
+                        'meter': meter.meter_number,
+                        'subscriber': meter.subscriber or meter.owner_name or '-',
+                        'stored': stored_current,
+                        'imported': imported_previous,
+                    }
+                )
+        if mismatches and not self.env.context.get('confirm_reading_mismatches'):
+            shown_mismatches = mismatches[:50]
+            if len(mismatches) > 50:
+                shown_mismatches.append(_('... y %s diferencias más.') % (len(mismatches) - 50))
+            self.write({
+                'confirmation_required': True,
+                'warning_message': _(
+                    'La lectura anterior del Excel no coincide con la lectura actual de '
+                    '%(period)s para estos contadores:\n\n%(differences)s'
+                ) % {
+                    'period': previous_period.name,
+                    'differences': '\n'.join(shown_mismatches),
+                },
+            })
+            return self._confirmation_action()
 
         meters = []
         created_count = 0
