@@ -50,6 +50,19 @@ class WaterPeriod(models.Model):
             prev_t, prev_y = str(t - 1), self.year
         return self.search([('trimester', '=', prev_t), ('year', '=', prev_y)], limit=1)
 
+    def action_open_meter_import(self):
+        self.ensure_one()
+        if self.state == 'closed':
+            raise UserError(_('No se puede importar el censo en un período cerrado.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Importar censo de contadores'),
+            'res_model': 'water.meter.import',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_period_id': self.id},
+        }
+
     def action_generate_readings(self):
         self.ensure_one()
         if self.state == 'closed':

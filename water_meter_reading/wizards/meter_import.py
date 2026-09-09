@@ -13,6 +13,7 @@ class WaterMeterImport(models.TransientModel):
 
     file = fields.Binary(string='Archivo', required=True)
     filename = fields.Char(string='Nombre del archivo')
+    period_id = fields.Many2one('water.period', string='Período', required=True)
 
     _column_fields = {
         'Ruta': 'name',
@@ -27,7 +28,7 @@ class WaterMeterImport(models.TransientModel):
         'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
     }
-    _required_headers = {'Ruta', 'Nombre'}
+    _required_headers = {'Ruta', 'Contador', 'Nombre'}
 
     _meter_types = {
         'DOM': 'dom',
@@ -90,6 +91,8 @@ class WaterMeterImport(models.TransientModel):
 
     def action_import(self):
         self.ensure_one()
+        if self.period_id.state == 'closed':
+            raise UserError(_('No se puede importar el censo en un período cerrado.'))
         rows = self._read_rows()
         if not rows:
             raise UserError(_('El archivo no contiene contadores para importar.'))
@@ -105,41 +108,42 @@ class WaterMeterImport(models.TransientModel):
                 _('Faltan columnas obligatorias: %s') % ', '.join(sorted(missing_headers)).title()
             )
 
-        period = self.env['water.period'].search(
-            [('state', 'in', ('draft', 'open'))],
-            order='year desc, trimester desc',
-            limit=1,
-        )
-
-        meters_to_create = []
-        previous_readings = []
+        available_fields = {
+            field
+            for header, field in self._column_fields.items()
+            if self._normalize_header(header) in normalized_rows[0]
+        }
+        imported_rows = []
         meter_numbers = set()
         routes = set()
         for row_number, row in enumerate(normalized_rows, start=2):
             values = {
                 field: row.get(self._normalize_header(header), '')
                 for header, field in self._column_fields.items()
+                if field in available_fields
             }
             values = {
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
-            if not values['name'] or not values['owner_name']:
-                raise ValidationError(_('Fila %s: Ruta y Nombre son obligatorios.') % row_number)
+            if not values['name'] or not values['meter_number'] or not values['owner_name']:
+                raise ValidationError(_('Fila %s: Ruta, Contador y Nombre son obligatorios.') % row_number)
             if values['name'] in routes:
                 raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
                     row_number, values['name']))
-            if values['meter_number'] and values['meter_number'] in meter_numbers:
+            if values['meter_number'] in meter_numbers:
                 raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
                     row_number, values['meter_number']))
-            values['new_meter'] = self._parse_boolean(values['new_meter'], row_number)
-            meter_type = values['meter_type'].upper()
-            if meter_type and meter_type not in self._meter_types:
-                raise ValidationError(
-                    _('Fila %s: Tipo de contador debe ser DOM, ASIM, NDOM o ESP.') % row_number
-                )
-            values['meter_type'] = self._meter_types.get(meter_type, False)
-            previous_reading = values.pop('reading_previous')
+            if 'new_meter' in values:
+                values['new_meter'] = self._parse_boolean(values['new_meter'], row_number)
+            if 'meter_type' in values:
+                meter_type = values['meter_type'].upper()
+                if meter_type and meter_type not in self._meter_types:
+                    raise ValidationError(
+                        _('Fila %s: Tipo de contador debe ser DOM, ASIM, NDOM o ESP.') % row_number
+                    )
+                values['meter_type'] = self._meter_types.get(meter_type, False)
+            previous_reading = values.pop('reading_previous', False)
             if previous_reading:
                 try:
                     previous_reading = int(previous_reading)
@@ -149,51 +153,92 @@ class WaterMeterImport(models.TransientModel):
                     raise ValidationError(_('Fila %s: Lectura anterior no puede ser negativa.') % row_number)
             else:
                 previous_reading = False
-            if not values['meter_number']:
-                values['meter_number'] = False
             routes.add(values['name'])
-            if values['meter_number']:
-                meter_numbers.add(values['meter_number'])
-            meters_to_create.append(values)
-            previous_readings.append(previous_reading)
+            meter_numbers.add(values['meter_number'])
+            imported_rows.append((values, previous_reading))
 
-        existing_meters = self.env['water.meter'].search([('meter_number', 'in', list(meter_numbers))])
-        if existing_meters:
-            raise ValidationError(_('Ya existen estos contadores: %s') % ', '.join(existing_meters.mapped('meter_number')))
-        existing_routes = self.env['water.meter'].search([
-            ('name', 'in', list(routes)),
-        ])
-        if existing_routes:
-            raise ValidationError(_('Ya existen estas rutas: %s') % ', '.join(existing_routes.mapped('name')))
+        Meter = self.env['water.meter'].with_context(active_test=False)
+        existing_by_number = {
+            meter.meter_number: meter
+            for meter in Meter.search([('meter_number', 'in', list(meter_numbers))])
+        }
+        existing_by_route = {
+            meter.name: meter
+            for meter in Meter.search([('name', 'in', list(routes))])
+        }
 
-        meters = self.env['water.meter'].with_context(skip_initial_reading=True).create(meters_to_create)
-        readings = []
-        for meter, previous_reading in zip(meters, previous_readings):
-            if previous_reading is False:
-                continue
-            if period:
-                readings.append({
-                    'meter_id': meter.id,
-                    'period_id': period.id,
-                    'reading_previous': previous_reading,
-                    'date': fields.Date.context_today(self),
-                })
+        meters = []
+        created_count = 0
+        updated_count = 0
+        for values, previous_reading in imported_rows:
+            meter = existing_by_number.get(values['meter_number'])
+            route_owner = existing_by_route.get(values['name'])
+            if route_owner and route_owner != meter:
+                raise ValidationError(
+                    _('La ruta %(route)s ya pertenece al contador %(meter)s.') % {
+                        'route': values['name'],
+                        'meter': route_owner.meter_number,
+                    }
+                )
+            if meter:
+                update_values = dict(values, active=True)
+                changed_values = {
+                    field: value
+                    for field, value in update_values.items()
+                    if meter[field] != value
+                }
+                if changed_values:
+                    meter.write(changed_values)
+                    updated_count += 1
             else:
-                readings.append({
-                    'meter_id': meter.id,
-                    'reading_previous': previous_reading,
-                    'reading_current': previous_reading,
-                    'date': fields.Date.context_today(self),
-                })
-        if readings:
-            self.env['water.reading'].create(readings)
+                meter = Meter.with_context(skip_initial_reading=True).create(dict(values, active=True))
+                existing_by_number[meter.meter_number] = meter
+                existing_by_route[meter.name] = meter
+                created_count += 1
+            meters.append((meter, previous_reading))
+
+        Reading = self.env['water.reading']
+        readings_by_meter = {
+            reading.meter_id.id: reading
+            for reading in Reading.search([
+                ('period_id', '=', self.period_id.id),
+                ('meter_id', 'in', [meter.id for meter, _previous in meters]),
+            ])
+        }
+        reading_count = 0
+        for meter, previous_reading in meters:
+            reading = readings_by_meter.get(meter.id)
+            if reading:
+                if previous_reading is not False and reading.reading_previous != previous_reading:
+                    reading.reading_previous = previous_reading
+                continue
+            reading_values = {
+                'meter_id': meter.id,
+                'period_id': self.period_id.id,
+                'date': fields.Date.context_today(self),
+            }
+            if previous_reading is not False:
+                reading_values['reading_previous'] = previous_reading
+            Reading.create(reading_values)
+            reading_count += 1
+
+        if self.period_id.state == 'draft':
+            self.period_id.state = 'open'
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Importación completada'),
-                'message': _('%s contadores importados.') % len(meters),
+                'message': _(
+                    '%(created)s contadores creados, %(updated)s actualizados y '
+                    '%(readings)s añadidos al período %(period)s.'
+                ) % {
+                    'created': created_count,
+                    'updated': updated_count,
+                    'readings': reading_count,
+                    'period': self.period_id.name,
+                },
                 'type': 'success',
                 'sticky': False,
             },

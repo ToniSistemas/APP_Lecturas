@@ -1,8 +1,9 @@
-from odoo import _, models, fields, api
+from odoo import models, fields, api
 
 
 class WaterMeter(models.Model):
     _name = 'water.meter'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Contador de agua'
     _rec_name = 'meter_number'
 
@@ -11,40 +12,32 @@ class WaterMeter(models.Model):
         ('unique_ruta', 'UNIQUE(name)', 'La ruta ya existe. Debe ser única.'),
     ]
 
-    name = fields.Char(string='Ruta', required=True)
-    meter_number = fields.Char(string='Contador')
-    active = fields.Boolean(string='Activo', default=True)
-    address = fields.Char(string='Dirección')
-    zip = fields.Char(string='C.P.')
-    municipality = fields.Char(string='Municipio')
-    owner_name = fields.Char(string='Nombre')
-    subscriber = fields.Char(string='Abonado')
-    cadastral_ref = fields.Char(string='Referencia catastral')
-    new_meter = fields.Boolean(string='Contador nuevo', default=False)
+    name = fields.Char(string='Ruta', required=True, tracking=True)
+    meter_number = fields.Char(string='Contador', tracking=True)
+    active = fields.Boolean(string='Activo', default=True, tracking=True)
+    address = fields.Char(string='Dirección', tracking=True)
+    zip = fields.Char(string='C.P.', tracking=True)
+    municipality = fields.Char(string='Municipio', tracking=True)
+    owner_name = fields.Char(string='Nombre', tracking=True)
+    subscriber = fields.Char(string='Abonado', tracking=True)
+    cadastral_ref = fields.Char(string='Referencia catastral', tracking=True)
+    new_meter = fields.Boolean(string='Contador nuevo', default=False, tracking=True)
     meter_type = fields.Selection([
         ('dom', 'DOM - Doméstico'),
         ('asim', 'ASIM - Asimilado'),
         ('ndom', 'NDOM - No doméstico'),
         ('esp', 'ESP - Especial'),
-    ], string='Tipo de contador')
-    reversed_meter = fields.Boolean(string='Contador al revés', default=False)
+    ], string='Tipo de contador', tracking=True)
+    reversed_meter = fields.Boolean(string='Contador al revés', default=False, tracking=True)
     meter_max_value = fields.Integer(
         string='Valor máximo del contador',
         default=9999,
+        tracking=True,
         help='Valor en el que el contador da la vuelta (ej: 9999, 99999). '
              'Solo se usa si «Contador al revés» está activo.',
     )
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
-
-    def action_open_import(self):
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Importar contadores'),
-            'res_model': 'water.meter.import',
-            'view_mode': 'form',
-            'target': 'new',
-        }
 
     @api.model_create_multi
     def create(self, vals_list):
