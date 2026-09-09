@@ -20,6 +20,13 @@ class WaterMeter(models.Model):
     owner_name = fields.Char(string='Nombre')
     subscriber = fields.Char(string='Abonado')
     cadastral_ref = fields.Char(string='Referencia catastral')
+    new_meter = fields.Boolean(string='Contador nuevo', default=False)
+    meter_type = fields.Selection([
+        ('dom', 'DOM - Doméstico'),
+        ('asim', 'ASIM - Asimilado'),
+        ('ndom', 'NDOM - No doméstico'),
+        ('esp', 'ESP - Especial'),
+    ], string='Tipo de contador')
     reversed_meter = fields.Boolean(string='Contador al revés', default=False)
     meter_max_value = fields.Integer(
         string='Valor máximo del contador',

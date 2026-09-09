@@ -30,6 +30,8 @@
         <field name="meter_number"/>
         <field name="owner_name"/>
         <field name="subscriber" optional="hide"/>
+        <field name="meter_type" optional="show"/>
+        <field name="new_meter" optional="hide"/>
         <field name="address"/>
         <field name="municipality"/>
         <field name="reversed_meter" optional="hide"/>
@@ -69,6 +71,8 @@
               <field name="owner_name"/>
               <field name="subscriber"/>
               <field name="cadastral_ref"/>
+              <field name="meter_type"/>
+              <field name="new_meter"/>
               <field name="reversed_meter"/>
               <field name="meter_max_value"
                      invisible="not reversed_meter"

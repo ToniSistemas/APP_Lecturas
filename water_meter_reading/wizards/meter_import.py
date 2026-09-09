@@ -22,9 +22,36 @@ class WaterMeterImport(models.TransientModel):
         'Dirección': 'address',
         'C.P.': 'zip',
         'Municipio': 'municipality',
+        'Contador nuevo': 'new_meter',
+        'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
     }
     _required_headers = {'Ruta', 'Nombre'}
+
+    _meter_types = {
+        'DOM': 'dom',
+        'DOMESTICO': 'dom',
+        'DOMÉSTICO': 'dom',
+        'ASIM': 'asim',
+        'ASIMILADO': 'asim',
+        'NDOM': 'ndom',
+        'NO DOMESTICO': 'ndom',
+        'NO DOMÉSTICO': 'ndom',
+        'ESP': 'esp',
+        'ESPECIAL': 'esp',
+    }
+
+    def _parse_boolean(self, value, row_number):
+        normalized = value.strip().lower()
+        if not normalized:
+            return False
+        if normalized in ('1', 'sí', 'si', 'true', 'verdadero', 'x'):
+            return True
+        if normalized in ('0', 'no', 'false', 'falso'):
+            return False
+        raise ValidationError(
+            _('Fila %s: Contador nuevo debe indicar Sí/No, True/False o 1/0.') % row_number
+        )
 
     def _read_rows(self):
         self.ensure_one()
@@ -89,6 +116,13 @@ class WaterMeterImport(models.TransientModel):
             if values['meter_number'] and values['meter_number'] in meter_numbers:
                 raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
                     row_number, values['meter_number']))
+            values['new_meter'] = self._parse_boolean(values['new_meter'], row_number)
+            meter_type = values['meter_type'].upper()
+            if meter_type and meter_type not in self._meter_types:
+                raise ValidationError(
+                    _('Fila %s: Tipo de contador debe ser DOM, ASIM, NDOM o ESP.') % row_number
+                )
+            values['meter_type'] = self._meter_types.get(meter_type, False)
             previous_reading = values.pop('reading_previous')
             if previous_reading:
                 try:
