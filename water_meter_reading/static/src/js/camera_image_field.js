@@ -3,25 +3,19 @@ import { registry } from "@web/core/registry";
 import { ImageField, imageField } from "@web/views/fields/image/image_field";
 import { onMounted, onPatched } from "@odoo/owl";
 
-/**
- * CameraImageField: extends ImageField to force direct camera capture on mobile.
- * Adds capture="environment" to the hidden file input after each render so that
- * on Android/iOS tapping the button opens the rear camera directly.
- */
+/** Allow mobile browsers to offer both camera capture and the image gallery. */
 class CameraImageField extends ImageField {
     setup() {
         super.setup();
-        const enableCapture = () => {
+        const enableMobileImageSources = () => {
             if (!this.el) return;
             this.el.querySelectorAll('input[type="file"]').forEach((input) => {
-                input.setAttribute("capture", "environment");
-                if (!input.accept) {
-                    input.setAttribute("accept", "image/*");
-                }
+                input.setAttribute("accept", "image/*");
+                input.removeAttribute("capture");
             });
         };
-        onMounted(enableCapture);
-        onPatched(enableCapture);
+        onMounted(enableMobileImageSources);
+        onPatched(enableMobileImageSources);
     }
 }
 
