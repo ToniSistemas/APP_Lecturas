@@ -65,8 +65,4 @@ class WaterMeter(models.Model):
 
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = (
-                f"{rec.meter_number} – {rec.name}"
-                if rec.meter_number and rec.name
-                else (rec.meter_number or rec.name or '')
-            )
+            rec.display_name = rec.meter_number or rec.name or ''

@@ -95,6 +95,8 @@
                   <field name="reading_current"/>
                   <field name="difference" readonly="1"/>
                   <field name="observations"/>
+                      <field name="counter_photo" widget="image" string="Foto" readonly="1"
+                        options="{'size': [64, 64], 'zoom': true}"/>
                 </list>
               </field>
             </page>
