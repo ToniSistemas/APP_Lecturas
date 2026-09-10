@@ -27,9 +27,9 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _sync_streets(self):
         Street = self.env['water.reading.mobile.street'].sudo()
         meter_streets = {
-            meter.street.strip()
+            (meter.street or meter.address).strip()
             for meter in self.env['water.meter'].sudo().with_context(active_test=False).search([])
-            if meter.street and meter.street.strip()
+            if (meter.street or meter.address) and (meter.street or meter.address).strip()
         }
         existing_names = set(Street.search([('name', 'in', list(meter_streets))]).mapped('name'))
         Street.create([
@@ -54,7 +54,8 @@ class WaterReadingMobileSelector(models.TransientModel):
         if self.street_id:
             selected_street = self.street_id.name.strip().casefold()
             readings = readings.filtered(
-                lambda reading: (reading.meter_id.street or '').strip().casefold() == selected_street
+                lambda reading: (reading.meter_id.street or reading.meter_id.address or '')
+                .strip().casefold() == selected_street
             )
         if self.only_pending:
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
