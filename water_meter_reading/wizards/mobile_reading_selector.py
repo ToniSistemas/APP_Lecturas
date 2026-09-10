@@ -7,11 +7,8 @@ class WaterReadingMobileSelector(models.TransientModel):
     _description = 'Seleccionar lectura móvil'
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
-    address_id = fields.Many2one(
-        'water.reading.mobile.address.option',
-        string='Calle + Nº',
-        domain="[('period_id', '=', period_id)]",
-    )
+    pending_street = fields.Selection(selection='_selection_pending_streets', string='Calle + Nº')
+    all_street = fields.Selection(selection='_selection_all_streets', string='Calle + Nº')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
@@ -24,43 +21,48 @@ class WaterReadingMobileSelector(models.TransientModel):
         domain="[('id', 'in', available_meter_ids)]",
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        wizards = super().create(vals_list)
-        wizards._refresh_addresses()
-        return wizards
+    @api.model
+    def _street_options(self, period_id, pending):
+        readings = self.env['water.period'].browse(period_id).reading_ids.sudo()
+        if pending:
+            readings = readings.filtered(lambda reading: reading.reading_current == 0)
+        addresses = {
+            (
+                (meter.street or meter.address).strip(),
+                (meter.street_number or '').strip(),
+            )
+            for meter in readings.mapped('meter_id')
+            if (meter.street or meter.address) and (meter.street or meter.address).strip()
+        }
+        addresses = sorted(addresses, key=lambda address: (address[0].casefold(), address[1].casefold()))
+        return [
+            (f'{street}|{number}', f'{street} {number}'.strip())
+            for street, number in addresses
+        ]
 
-    def _refresh_addresses(self):
-        Address = self.env['water.reading.mobile.address.option'].sudo()
-        for wizard in self:
-            Address.search([('period_id', '=', wizard.period_id.id)]).unlink()
-            readings = wizard.period_id.reading_ids.sudo()
-            if wizard.only_pending:
-                readings = readings.filtered(lambda reading: reading.reading_current == 0)
-            addresses = sorted({
-                (
-                    (meter.street or meter.address).strip(),
-                    (meter.street_number or '').strip(),
-                )
-                for meter in readings.mapped('meter_id')
-                if (meter.street or meter.address) and (meter.street or meter.address).strip()
-            }, key=lambda address: (address[0].casefold(), address[1].casefold()))
-            Address.create([
-                {
-                    'period_id': wizard.period_id.id,
-                    'street': street,
-                    'street_number': street_number,
-                    'name': f'{street} {street_number}'.strip(),
-                }
-                for street, street_number in addresses
-            ])
+    @api.model
+    def _selection_pending_streets(self):
+        period_id = self.env.context.get('default_period_id')
+        return self._street_options(period_id, True) if period_id else []
+
+    @api.model
+    def _selection_all_streets(self):
+        period_id = self.env.context.get('default_period_id')
+        return self._street_options(period_id, False) if period_id else []
+
+    @api.onchange('only_pending')
+    def _onchange_only_pending(self):
+        self.pending_street = False
+        self.all_street = False
 
     def _filtered_readings(self):
         self.ensure_one()
         readings = self.period_id.reading_ids.sudo()
-        if self.address_id:
-            selected_street = self.address_id.street.strip().casefold()
-            selected_number = (self.address_id.street_number or '').strip().casefold()
+        selected_filter = self.pending_street if self.only_pending else self.all_street
+        if selected_filter:
+            selected_street, selected_number = selected_filter.split('|', 1)
+            selected_street = selected_street.strip().casefold()
+            selected_number = selected_number.strip().casefold()
             readings = readings.filtered(
                 lambda reading: (
                     (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
@@ -73,7 +75,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
         return readings
 
-    @api.depends('period_id', 'address_id', 'only_pending')
+    @api.depends('period_id', 'pending_street', 'all_street', 'only_pending')
     def _compute_counts(self):
         for wizard in self:
             all_readings = wizard.period_id.reading_ids.sudo()
@@ -83,17 +85,8 @@ class WaterReadingMobileSelector(models.TransientModel):
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
-    @api.onchange('only_pending')
-    def _onchange_only_pending(self):
-        if self.id:
-            self._refresh_addresses()
-            self.address_id = False
-            self._compute_counts()
-        if self.meter_id and self.meter_id not in self.available_meter_ids:
-            self.meter_id = False
-
-    @api.onchange('address_id')
-    def _onchange_address(self):
+    @api.onchange('pending_street', 'all_street')
+    def _onchange_street(self):
         self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
             self.meter_id = False
