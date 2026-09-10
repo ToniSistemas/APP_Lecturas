@@ -54,7 +54,7 @@
           </div>
           <div class="o_water_mobile_next_action">
             <button name="action_mobile_next" type="object" string="Siguiente"
-                    icon="fa-arrow-right" class="btn-secondary btn-sm"/>
+                    icon="fa-arrow-right" class="btn-primary btn-lg"/>
           </div>
 
           <group string="Ubicación" class="o_water_mobile_location">

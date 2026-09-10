@@ -52,7 +52,16 @@
     }
 
     .o_water_mobile_next_action {
+        display: block !important;
         margin: 0 0 0.75rem;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .o_water_mobile_next_action button {
+        display: block !important;
+        min-height: 2.75rem;
+        width: 100%;
     }
 
     .o_water_mobile_location {
