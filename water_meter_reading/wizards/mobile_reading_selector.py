@@ -7,6 +7,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     _description = 'Seleccionar lectura móvil'
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
+    address_id = fields.Many2one('water.reading.mobile.address.option', readonly=True)
     pending_street = fields.Selection(selection='_selection_pending_streets', string='Calle + Nº')
     all_street = fields.Selection(selection='_selection_all_streets', string='Calle + Nº')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
