@@ -45,6 +45,14 @@ class WaterReading(models.Model):
         string='Puede editar lectura anterior',
     )
     mobile_progress = fields.Char(compute='_compute_mobile_progress', string='Progreso')
+    history_reading_ids = fields.Many2many(
+        'water.reading',
+        relation='water_mobile_history_rel',
+        column1='reading_id',
+        column2='history_id',
+        compute='_compute_history_readings',
+        string='Últimas lecturas',
+    )
 
     @api.depends('period_id', 'period_id.reading_ids.reading_current')
     def _compute_mobile_progress(self):
@@ -58,6 +66,16 @@ class WaterReading(models.Model):
                 'pending': pending,
                 'total': len(readings),
             }
+
+    @api.depends('meter_id')
+    def _compute_history_readings(self):
+        for rec in self:
+            readings = self.search(
+                [('meter_id', '=', rec.meter_id.id)],
+                order='date desc, id desc',
+                limit=4,
+            ) if rec.meter_id else self.browse()
+            rec.history_reading_ids = [(6, 0, readings.ids)]
 
     @api.depends_context('uid')
     def _compute_allow_edit_previous(self):
