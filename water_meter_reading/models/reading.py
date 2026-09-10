@@ -93,6 +93,41 @@ class WaterReading(models.Model):
                 diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
             rec.difference = diff
 
+    @api.onchange('reading_current', 'reading_previous', 'meter_reversed')
+    def _onchange_reading_order(self):
+        for rec in self:
+            if (
+                rec.reading_current
+                and rec.reading_previous
+                and rec.reading_current < rec.reading_previous
+                and not rec.meter_reversed
+            ):
+                return {
+                    'warning': {
+                        'title': _('Lectura no válida'),
+                        'message': _(
+                            'La lectura actual no puede ser inferior a la lectura anterior. '
+                            'Marca «Contador dio la vuelta» si el contador ha pasado por cero.'
+                        ),
+                    }
+                }
+
+    @api.constrains('reading_current', 'reading_previous', 'meter_reversed')
+    def _check_reading_order(self):
+        for rec in self:
+            if (
+                rec.reading_current
+                and rec.reading_previous
+                and rec.reading_current < rec.reading_previous
+                and not rec.meter_reversed
+            ):
+                raise ValidationError(
+                    _(
+                        'La lectura actual no puede ser inferior a la lectura anterior. '
+                        'Marca «Contador dio la vuelta» si el contador ha pasado por cero.'
+                    )
+                )
+
     @api.onchange('new_meter')
     def _onchange_new_meter(self):
         if self.new_meter:
