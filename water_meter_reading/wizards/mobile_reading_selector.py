@@ -8,6 +8,7 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one('water.reading.mobile.address.option', readonly=True)
+    street = fields.Char(string='Calle')
     pending_street = fields.Char(string='Calle + Nº')
     all_street = fields.Char(string='Calle + Nº')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
@@ -24,27 +25,24 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     @api.onchange('only_pending')
     def _onchange_only_pending(self):
+        self.street = False
         self.pending_street = False
         self.all_street = False
 
     def _filtered_readings(self):
         self.ensure_one()
         readings = self.period_id.reading_ids.sudo()
-        selected_filter = self.pending_street if self.only_pending else self.all_street
-        if selected_filter:
-            selected_filter = selected_filter.strip().casefold()
+        if self.street:
+            selected_street = self.street.strip().casefold()
             readings = readings.filtered(
-                lambda reading: (
-                    f"{(reading.meter_id.street or reading.meter_id.address or '').strip()} "
-                    f"{(reading.meter_id.street_number or '').strip()}".strip().casefold()
-                    == selected_filter
-                )
+                lambda reading: (reading.meter_id.street or reading.meter_id.address or '')
+                .strip().casefold() == selected_street
             )
         if self.only_pending:
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
         return readings
 
-    @api.depends('period_id', 'pending_street', 'all_street', 'only_pending')
+    @api.depends('period_id', 'street', 'pending_street', 'all_street', 'only_pending')
     def _compute_counts(self):
         for wizard in self:
             all_readings = wizard.period_id.reading_ids.sudo()
@@ -54,7 +52,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
-    @api.onchange('pending_street', 'all_street')
+    @api.onchange('street', 'pending_street', 'all_street')
     def _onchange_street(self):
         self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
