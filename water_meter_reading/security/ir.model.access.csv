@@ -1,6 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_water_meter_import,access_water_meter_import,model_water_meter_import,base.group_user,1,1,1,1
 access_water_reading_mobile_selector,access_water_reading_mobile_selector,model_water_reading_mobile_selector,base.group_user,1,1,1,1
+access_water_reading_mobile_address,access_water_reading_mobile_address,model_water_reading_mobile_address,base.group_user,1,1,1,1
 access_water_meter,access_water_meter,model_water_meter,base.group_user,1,1,1,1
 access_water_reading,access_water_reading,model_water_reading,base.group_user,1,1,1,1
 access_water_reading_photo,access_water_reading_photo,model_water_reading_photo,base.group_user,1,1,1,1

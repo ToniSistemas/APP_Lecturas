@@ -7,7 +7,12 @@ class WaterReadingMobileSelector(models.TransientModel):
     _description = 'Seleccionar lectura móvil'
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
-    route = fields.Selection(selection='_selection_addresses', string='Dirección')
+    address_id = fields.Many2one(
+        'water.reading.mobile.address',
+        string='Dirección',
+        domain="[('selector_id', '=', id)]",
+    )
+    address_ids = fields.One2many('water.reading.mobile.address', 'selector_id')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
@@ -20,43 +25,54 @@ class WaterReadingMobileSelector(models.TransientModel):
         domain="[('id', 'in', available_meter_ids)]",
     )
 
-    @api.model
-    def _selection_addresses(self):
-        period_id = (
-            self.env.context.get('default_period_id')
-            or self.env.context.get('active_id')
-        )
-        if period_id:
-            period = self.env['water.period'].browse(period_id)
-            meters = period.reading_ids.sudo().mapped('meter_id')
-        else:
-            meters = self.env['water.meter'].sudo().with_context(active_test=False).search([])
-        addresses = {
-            address.strip()
-            for address in meters.mapped('address')
-            if address and address.strip()
-        }
-        addresses = sorted(
-            addresses,
-            key=lambda address: address.casefold(),
-        )
-        return [(address, address) for address in addresses if address]
+    @api.model_create_multi
+    def create(self, vals_list):
+        wizards = super().create(vals_list)
+        wizards._refresh_addresses()
+        return wizards
 
-    @api.depends('period_id', 'route', 'only_pending')
+    def _refresh_addresses(self):
+        Address = self.env['water.reading.mobile.address']
+        for wizard in self:
+            wizard.address_ids.unlink()
+            readings = wizard.period_id.reading_ids.sudo()
+            if wizard.only_pending:
+                readings = readings.filtered(lambda reading: reading.reading_current == 0)
+            addresses = sorted({
+                address.strip()
+                for address in readings.mapped('meter_id.address')
+                if address and address.strip()
+            }, key=str.casefold)
+            Address.create([
+                {'selector_id': wizard.id, 'name': address}
+                for address in addresses
+            ])
+
+    @api.depends('period_id', 'address_id', 'only_pending', 'address_ids')
     def _compute_counts(self):
         for wizard in self:
             readings = wizard.period_id.reading_ids
             wizard.total_count = len(readings)
             wizard.read_count = len(readings.filtered(lambda reading: reading.reading_current != 0))
-            if wizard.route:
-                readings = readings.filtered(lambda reading: reading.meter_id.address == wizard.route)
+            if wizard.address_id:
+                readings = readings.filtered(
+                    lambda reading: reading.meter_id.address == wizard.address_id.name
+                )
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
-    @api.onchange('route', 'only_pending')
-    def _onchange_filters(self):
+    @api.onchange('only_pending')
+    def _onchange_only_pending(self):
+        if self.id:
+            self._refresh_addresses()
+            self.address_id = False
+        if self.meter_id and self.meter_id not in self.available_meter_ids:
+            self.meter_id = False
+
+    @api.onchange('address_id')
+    def _onchange_address(self):
         if self.meter_id and self.meter_id not in self.available_meter_ids:
             self.meter_id = False
 
