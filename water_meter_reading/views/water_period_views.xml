@@ -90,6 +90,8 @@
             </group>
             <group>
               <field name="reading_count" string="Contadores registrados"/>
+              <field name="pending_count" string="Contadores pendientes"/>
+              <field name="read_count" string="Contadores leídos"/>
             </group>
           </group>
           <notebook>

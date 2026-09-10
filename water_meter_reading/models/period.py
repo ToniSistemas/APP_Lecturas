@@ -30,6 +30,8 @@ class WaterPeriod(models.Model):
     ], string='Estado', default='draft', readonly=True)
     reading_ids = fields.One2many('water.reading', 'period_id', string='Lecturas')
     reading_count = fields.Integer(compute='_compute_reading_count', string='Lecturas')
+    pending_count = fields.Integer(compute='_compute_reading_counts', string='Contadores pendientes')
+    read_count = fields.Integer(compute='_compute_reading_counts', string='Contadores leídos')
 
     @api.depends('trimester', 'year')
     def _compute_name(self):
@@ -40,6 +42,12 @@ class WaterPeriod(models.Model):
     def _compute_reading_count(self):
         for rec in self:
             rec.reading_count = len(rec.reading_ids)
+
+    @api.depends('reading_ids.reading_current')
+    def _compute_reading_counts(self):
+        for rec in self:
+            rec.pending_count = len(rec.reading_ids.filtered(lambda reading: reading.reading_current == 0))
+            rec.read_count = len(rec.reading_ids.filtered(lambda reading: reading.reading_current != 0))
 
     def _get_previous_period(self):
         """Devuelve el período inmediatamente anterior a este, o False si no existe."""
