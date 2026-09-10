@@ -16,6 +16,14 @@ class WaterReadingMobileSelector(models.TransientModel):
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
     read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
+    history_reading_ids = fields.Many2many(
+        'water.reading',
+        relation='water_mobile_history_rel',
+        column1='selector_id',
+        column2='reading_id',
+        compute='_compute_history_readings',
+        string='Últimas lecturas',
+    )
     meter_id = fields.Many2one(
         'water.meter',
         string='Contador',
@@ -76,6 +84,19 @@ class WaterReadingMobileSelector(models.TransientModel):
         self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
             self.meter_id = False
+
+    @api.depends('meter_id')
+    def _compute_history_readings(self):
+        for wizard in self:
+            if wizard.meter_id:
+                readings = self.env['water.reading'].search(
+                    [('meter_id', '=', wizard.meter_id.id)],
+                    order='date desc, id desc',
+                    limit=4,
+                )
+                wizard.history_reading_ids = [(6, 0, readings.ids)]
+            else:
+                wizard.history_reading_ids = [(5, 0, 0)]
 
     def action_open_reading(self):
         self.ensure_one()
