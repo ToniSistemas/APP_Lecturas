@@ -10,7 +10,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     address_id = fields.Many2one(
         'water.reading.mobile.address',
         string='Dirección',
-        domain="[('selector_id', '=', id)]",
+        domain="[('id', 'in', address_ids)]",
     )
     address_ids = fields.One2many('water.reading.mobile.address', 'selector_id')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
