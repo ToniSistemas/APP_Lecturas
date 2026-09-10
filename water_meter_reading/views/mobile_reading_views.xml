@@ -16,7 +16,7 @@
           <group>
             <field name="period_id"/>
             <field name="only_pending"/>
-            <field name="route" options="{'no_create': true}"/>
+            <field name="route" string="Dirección" options="{'no_create': true}"/>
             <field name="available_count" readonly="1"/>
             <field name="available_meter_ids" invisible="1"/>
             <field name="meter_id"
