@@ -1,10 +1,18 @@
 .o_water_mobile_selector,
 .o_water_mobile_reading {
-    header {
+    header,
+    .o_form_statusbar_buttons {
         display: flex !important;
         flex-wrap: nowrap !important;
         gap: 0.35rem;
         overflow: visible !important;
+    }
+
+    .o_form_statusbar_buttons > button,
+    header > button {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        visibility: visible !important;
     }
 
     .o_water_mobile_action {
@@ -44,13 +52,15 @@
     }
 
     .o_water_mobile_location {
-        display: grid !important;
+        display: flex !important;
         gap: 0 1rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: flex-start;
     }
 
     .o_water_mobile_location_column {
-        display: block !important;
+        display: grid !important;
+        flex: 1 1 0;
+        grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
         min-width: 0;
     }
 
