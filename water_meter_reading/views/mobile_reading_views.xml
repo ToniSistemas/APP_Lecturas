@@ -39,9 +39,9 @@
       <form string="Lectura móvil" class="o_water_mobile_reading">
         <header>
           <button name="action_mobile_done" type="object" string="Guardar"
-            icon="fa-check" class="btn-primary btn-sm"/>
+            icon="fa-check" class="btn-primary btn-sm o_water_mobile_action"/>
           <button name="action_mobile_next" type="object" string="Siguiente"
-            icon="fa-arrow-right" class="btn-secondary btn-sm"/>
+            icon="fa-arrow-right" class="btn-secondary btn-sm o_water_mobile_action"/>
         </header>
         <sheet>
           <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"
@@ -56,12 +56,12 @@
           </div>
 
           <group string="Ubicación" class="o_water_mobile_location">
-            <group>
+            <group class="o_water_mobile_location_column">
               <field name="meter_id" readonly="1"/>
               <field name="meter_owner_name" readonly="1"/>
               <field name="meter_subscriber" readonly="1"/>
             </group>
-            <group>
+            <group class="o_water_mobile_location_column">
               <field name="meter_route" readonly="1"/>
               <field name="meter_street" string="Calle" readonly="1"/>
               <field name="meter_street_number" string="Nº" readonly="1"/>
