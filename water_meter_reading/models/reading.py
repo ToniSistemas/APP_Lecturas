@@ -153,6 +153,28 @@ class WaterReading(models.Model):
             },
         }
 
+    def action_mobile_next(self):
+        self.ensure_one()
+        pending_readings = self.period_id.reading_ids.filtered(
+            lambda reading: reading.reading_current == 0 and reading.id != self.id
+        )
+
+        def route_key(reading):
+            route = (reading.meter_route or '').strip()
+            return (0, int(route), '') if route.isdigit() else (1, route.casefold(), '')
+
+        ordered_pending = pending_readings.sorted(key=route_key)
+        current_key = route_key(self)
+        next_reading = next(
+            (reading for reading in ordered_pending if route_key(reading) > current_key),
+            None,
+        )
+        if not next_reading and ordered_pending:
+            next_reading = ordered_pending[0]
+        if next_reading:
+            return next_reading._mobile_action()
+        return self.action_mobile_done()
+
     @api.onchange('meter_id', 'period_id')
     def _onchange_meter_id(self):
         if not self.meter_id:

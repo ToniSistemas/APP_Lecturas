@@ -40,6 +40,8 @@
         <header>
           <button name="action_mobile_done" type="object" string="Guardar y volver al selector"
             icon="fa-check" class="btn-primary"/>
+          <button name="action_mobile_next" type="object" string="Guardar y siguiente"
+            icon="fa-arrow-right" class="btn-secondary"/>
         </header>
         <sheet>
           <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"
