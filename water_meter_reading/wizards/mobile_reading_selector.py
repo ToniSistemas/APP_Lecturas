@@ -10,13 +10,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     address_id = fields.Many2one(
         'water.reading.mobile.address.option',
         string='Calle + Nº',
-        domain="[('id', 'in', available_address_ids)]",
-    )
-    available_address_ids = fields.Many2many(
-        'water.reading.mobile.address.option',
-        relation='water_mobile_addr_rel',
-        column1='selector_id',
-        column2='address_id',
+        domain="[('period_id', '=', period_id)]",
     )
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
@@ -39,6 +33,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _refresh_addresses(self):
         Address = self.env['water.reading.mobile.address.option'].sudo()
         for wizard in self:
+            Address.search([('period_id', '=', wizard.period_id.id)]).unlink()
             readings = wizard.period_id.reading_ids.sudo()
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
@@ -50,15 +45,7 @@ class WaterReadingMobileSelector(models.TransientModel):
                 for meter in readings.mapped('meter_id')
                 if (meter.street or meter.address) and (meter.street or meter.address).strip()
             }, key=lambda address: (address[0].casefold(), address[1].casefold()))
-            address_records = Address.search([
-                ('period_id', '=', wizard.period_id.id),
-                ('street', 'in', [address[0] for address in addresses]),
-            ])
-            existing_keys = {
-                (address.street, address.street_number or '')
-                for address in address_records
-            }
-            address_records |= Address.create([
+            Address.create([
                 {
                     'period_id': wizard.period_id.id,
                     'street': street,
@@ -66,12 +53,7 @@ class WaterReadingMobileSelector(models.TransientModel):
                     'name': f'{street} {street_number}'.strip(),
                 }
                 for street, street_number in addresses
-                if (street, street_number) not in existing_keys
             ])
-            address_records = address_records.filtered(
-                lambda address: (address.street, address.street_number or '') in addresses
-            )
-            wizard.available_address_ids = [(6, 0, address_records.ids)]
 
     def _filtered_readings(self):
         self.ensure_one()
@@ -91,7 +73,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
         return readings
 
-    @api.depends('period_id', 'address_id', 'only_pending', 'available_address_ids')
+    @api.depends('period_id', 'address_id', 'only_pending')
     def _compute_counts(self):
         for wizard in self:
             all_readings = wizard.period_id.reading_ids.sudo()
