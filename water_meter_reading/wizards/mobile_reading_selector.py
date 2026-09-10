@@ -12,7 +12,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     pending_street = fields.Char(string='Calle + Nº')
     all_street = fields.Char(string='Calle + Nº')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
-    available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
+    available_meter_ids = fields.Many2many('water.meter', compute='_compute_counts')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
     read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
