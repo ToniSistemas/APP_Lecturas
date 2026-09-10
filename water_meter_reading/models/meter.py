@@ -6,7 +6,7 @@ class WaterMeter(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Contador de agua'
     _rec_name = 'meter_number'
-    _rec_names_search = ['meter_number', 'subscriber', 'owner_name', 'name']
+    _rec_names_search = ['meter_number', 'street', 'street_number', 'subscriber', 'owner_name', 'name']
 
     _sql_constraints = [
         ('unique_meter_number', 'UNIQUE(meter_number)', 'El número de contador ya existe. Debe ser único.'),
