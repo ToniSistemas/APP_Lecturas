@@ -190,6 +190,17 @@ class WaterReading(models.Model):
             'context': {'form_view_initial_mode': 'edit'},
         }
 
+    def action_open_meter(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Contador'),
+            'res_model': 'water.meter',
+            'res_id': self.meter_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
     def action_mobile_done(self):
         self.ensure_one()
         view = self.env.ref('water_meter_reading.view_water_reading_mobile_selector_form')
