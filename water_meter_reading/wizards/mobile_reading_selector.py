@@ -24,7 +24,10 @@ class WaterReadingMobileSelector(models.TransientModel):
         if not period_id:
             return []
         readings = self.env['water.reading'].search([('period_id', '=', period_id)])
-        addresses = sorted(set(readings.mapped('meter_address')), key=lambda address: address.casefold())
+        addresses = sorted(
+            set(readings.mapped('meter_id.address')),
+            key=lambda address: address.casefold(),
+        )
         return [(address, address) for address in addresses if address]
 
     @api.depends('period_id', 'route', 'only_pending')
@@ -32,7 +35,7 @@ class WaterReadingMobileSelector(models.TransientModel):
         for wizard in self:
             readings = wizard.period_id.reading_ids
             if wizard.route:
-                readings = readings.filtered(lambda reading: reading.meter_address == wizard.route)
+                readings = readings.filtered(lambda reading: reading.meter_id.address == wizard.route)
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
             wizard.available_meter_ids = readings.mapped('meter_id')
