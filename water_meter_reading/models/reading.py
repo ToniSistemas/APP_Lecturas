@@ -1,5 +1,6 @@
 from odoo import _, models, fields, api
 from odoo.exceptions import ValidationError
+from markupsafe import escape
 
 
 class WaterReading(models.Model):
@@ -12,6 +13,8 @@ class WaterReading(models.Model):
     meter_number = fields.Char(string='Contador Nº', readonly=True)
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
     meter_owner_name = fields.Char(related='meter_id.owner_name', string='Nombre', store=True, readonly=True)
+    meter_route_link = fields.Html(compute='_compute_meter_links', string='Ruta', sanitize=True)
+    meter_owner_link = fields.Html(compute='_compute_meter_links', string='Nombre', sanitize=True)
     meter_subscriber = fields.Char(related='meter_id.subscriber', string='Abonado', readonly=True)
     meter_address = fields.Char(related='meter_id.address', string='Dirección', readonly=True)
     meter_street = fields.Char(related='meter_id.street', string='Calle', readonly=True)
@@ -45,6 +48,19 @@ class WaterReading(models.Model):
         string='Puede editar lectura anterior',
     )
     mobile_progress = fields.Char(compute='_compute_mobile_progress', string='Progreso')
+
+    @api.depends('meter_id', 'meter_route', 'meter_owner_name')
+    def _compute_meter_links(self):
+        for rec in self:
+            href = f'/web#id={rec.meter_id.id}&model=water.meter&view_type=form'
+            rec.meter_route_link = (
+                f'<a href="{href}">{escape(rec.meter_route or "")}</a>'
+                if rec.meter_id else ''
+            )
+            rec.meter_owner_link = (
+                f'<a href="{href}">{escape(rec.meter_owner_name or "")}</a>'
+                if rec.meter_id else ''
+            )
     history_reading_ids = fields.Many2many(
         'water.reading',
         relation='water_mobile_history_rel',

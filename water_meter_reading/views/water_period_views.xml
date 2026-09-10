@@ -108,8 +108,8 @@
                             <field name="meter_id" string="Contador" readonly="1"
                               optional="show"
                               options="{'no_open': false, 'open_form_view': true}"/>
-                  <field name="meter_route" string="Ruta" readonly="1" optional="show"/>
-                  <field name="meter_owner_name" string="Nombre" readonly="1" optional="show"/>
+                  <field name="meter_route_link" string="Ruta" readonly="1" optional="show"/>
+                  <field name="meter_owner_link" string="Nombre" readonly="1" optional="show"/>
                       <field name="meter_municipality" string="Municipio" readonly="1" optional="hide"/>
                   <field name="meter_zip" string="C.P." readonly="1" optional="hide"/>
                       <field name="date" optional="hide"/>
