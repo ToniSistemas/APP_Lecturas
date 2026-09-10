@@ -12,7 +12,12 @@ class WaterReadingMobileSelector(models.TransientModel):
         string='Dirección',
         domain="[('id', 'in', available_address_ids)]",
     )
-    available_address_ids = fields.Many2many('water.reading.mobile.address.option')
+    available_address_ids = fields.Many2many(
+        'water.reading.mobile.address.option',
+        relation='water_mobile_addr_rel',
+        column1='selector_id',
+        column2='address_id',
+    )
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
