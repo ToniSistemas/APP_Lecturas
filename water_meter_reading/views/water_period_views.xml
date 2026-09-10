@@ -125,7 +125,8 @@
                         invisible="not meter_reversed" required="meter_reversed" optional="hide"/>
                       <field name="observations" optional="show"/>
                       <field name="counter_photo" widget="camera_image" string="Foto"
-                        options="{&quot;size&quot;: [64, 64]}" optional="show"/>
+                            options="{&quot;size&quot;: [64, 64], &quot;zoom&quot;: true}"
+                            optional="show"/>
                 </list>
               </field>
             </page>
