@@ -10,9 +10,9 @@ class WaterReadingMobileSelector(models.TransientModel):
     address_id = fields.Many2one(
         'water.reading.mobile.address',
         string='Dirección',
-        domain="[('id', 'in', address_ids)]",
+        domain="[('id', 'in', available_address_ids)]",
     )
-    address_ids = fields.One2many('water.reading.mobile.address', 'selector_id')
+    available_address_ids = fields.Many2many('water.reading.mobile.address')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
@@ -34,7 +34,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _refresh_addresses(self):
         Address = self.env['water.reading.mobile.address']
         for wizard in self:
-            wizard.address_ids.unlink()
+            wizard.available_address_ids.unlink()
             readings = wizard.period_id.reading_ids.sudo()
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
@@ -43,12 +43,13 @@ class WaterReadingMobileSelector(models.TransientModel):
                 for address in readings.mapped('meter_id.address')
                 if address and address.strip()
             }, key=str.casefold)
-            Address.create([
+            addresses = Address.create([
                 {'selector_id': wizard.id, 'name': address}
                 for address in addresses
             ])
+            wizard.available_address_ids = [(6, 0, addresses.ids)]
 
-    @api.depends('period_id', 'address_id', 'only_pending', 'address_ids')
+    @api.depends('period_id', 'address_id', 'only_pending', 'available_address_ids')
     def _compute_counts(self):
         for wizard in self:
             readings = wizard.period_id.reading_ids
