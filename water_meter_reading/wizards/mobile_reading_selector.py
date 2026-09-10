@@ -8,11 +8,11 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one(
-        'water.reading.mobile.address',
+        'water.reading.mobile.address.option',
         string='Dirección',
         domain="[('id', 'in', available_address_ids)]",
     )
-    available_address_ids = fields.Many2many('water.reading.mobile.address')
+    available_address_ids = fields.Many2many('water.reading.mobile.address.option')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
@@ -32,9 +32,8 @@ class WaterReadingMobileSelector(models.TransientModel):
         return wizards
 
     def _refresh_addresses(self):
-        Address = self.env['water.reading.mobile.address']
+        Address = self.env['water.reading.mobile.address.option'].sudo()
         for wizard in self:
-            wizard.available_address_ids.unlink()
             readings = wizard.period_id.reading_ids.sudo()
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
@@ -43,11 +42,17 @@ class WaterReadingMobileSelector(models.TransientModel):
                 for address in readings.mapped('meter_id.address')
                 if address and address.strip()
             }, key=str.casefold)
-            addresses = Address.create([
-                {'selector_id': wizard.id, 'name': address}
-                for address in addresses
+            address_records = Address.search([
+                ('period_id', '=', wizard.period_id.id),
+                ('name', 'in', addresses),
             ])
-            wizard.available_address_ids = [(6, 0, addresses.ids)]
+            existing_names = set(address_records.mapped('name'))
+            address_records |= Address.create([
+                {'period_id': wizard.period_id.id, 'name': address}
+                for address in addresses if address not in existing_names
+            ])
+            address_records = address_records.filtered(lambda address: address.name in addresses)
+            wizard.available_address_ids = [(6, 0, address_records.ids)]
 
     @api.depends('period_id', 'address_id', 'only_pending', 'available_address_ids')
     def _compute_counts(self):
