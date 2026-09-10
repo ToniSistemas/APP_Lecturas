@@ -16,7 +16,7 @@
           <group>
             <field name="period_id"/>
             <field name="only_pending"/>
-            <field name="address_id" string="Calle" options="{'no_create': true}"/>
+            <field name="address_id" string="Calle + Nº" options="{'no_create': true}"/>
               <field name="available_address_ids" invisible="1"/>
               <field name="meter_id"
                    options="{'no_create': true, 'no_open': true}"

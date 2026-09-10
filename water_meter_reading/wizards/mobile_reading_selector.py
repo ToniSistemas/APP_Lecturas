@@ -9,7 +9,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one(
         'water.reading.mobile.address.option',
-        string='Calle',
+        string='Calle + Nº',
         domain="[('id', 'in', available_address_ids)]",
     )
     available_address_ids = fields.Many2many(
@@ -43,32 +43,49 @@ class WaterReadingMobileSelector(models.TransientModel):
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
             addresses = sorted({
-                (meter.street or meter.address).strip()
+                (
+                    (meter.street or meter.address).strip(),
+                    (meter.street_number or '').strip(),
+                )
                 for meter in readings.mapped('meter_id')
                 if (meter.street or meter.address) and (meter.street or meter.address).strip()
-            }, key=str.casefold)
+            }, key=lambda address: (address[0].casefold(), address[1].casefold()))
             address_records = Address.search([
                 ('period_id', '=', wizard.period_id.id),
-                ('name', 'in', addresses),
+                ('street', 'in', [address[0] for address in addresses]),
             ])
-            existing_names = set(address_records.mapped('name'))
+            existing_keys = {
+                (address.street, address.street_number or '')
+                for address in address_records
+            }
             address_records |= Address.create([
-                {'period_id': wizard.period_id.id, 'name': street}
-                for street in addresses if street not in existing_names
+                {
+                    'period_id': wizard.period_id.id,
+                    'street': street,
+                    'street_number': street_number,
+                    'name': f'{street} {street_number}'.strip(),
+                }
+                for street, street_number in addresses
+                if (street, street_number) not in existing_keys
             ])
-            address_records = address_records.filtered(lambda address: address.name in addresses)
+            address_records = address_records.filtered(
+                lambda address: (address.street, address.street_number or '') in addresses
+            )
             wizard.available_address_ids = [(6, 0, address_records.ids)]
 
     def _filtered_readings(self):
         self.ensure_one()
         readings = self.period_id.reading_ids.sudo()
         if self.address_id:
-            selected_address = self.address_id.name.strip().casefold()
+            selected_street = self.address_id.street.strip().casefold()
+            selected_number = (self.address_id.street_number or '').strip().casefold()
             readings = readings.filtered(
-                    lambda reading: (
-                        (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
-                        == selected_address
-                    )
+                lambda reading: (
+                    (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
+                    == selected_street
+                    and (reading.meter_id.street_number or '').strip().casefold()
+                    == selected_number
+                )
             )
         if self.only_pending:
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
