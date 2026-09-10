@@ -8,8 +8,8 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one('water.reading.mobile.address.option', readonly=True)
-    pending_street = fields.Selection(selection='_selection_pending_streets', string='Calle + Nº')
-    all_street = fields.Selection(selection='_selection_all_streets', string='Calle + Nº')
+    pending_street = fields.Char(string='Calle + Nº')
+    all_street = fields.Char(string='Calle + Nº')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
@@ -22,31 +22,6 @@ class WaterReadingMobileSelector(models.TransientModel):
         domain="[('id', 'in', available_meter_ids)]",
     )
 
-    @api.model
-    def _street_options(self, period_id, pending):
-        meters = self.env['water.meter'].sudo().with_context(active_test=False).search([])
-        addresses = {
-            (
-                (meter.street or meter.address).strip(),
-                (meter.street_number or '').strip(),
-            )
-            for meter in meters
-            if (meter.street or meter.address) and (meter.street or meter.address).strip()
-        }
-        addresses = sorted(addresses, key=lambda address: (address[0].casefold(), address[1].casefold()))
-        return [
-            (f'{street}|{number}', f'{street} {number}'.strip())
-            for street, number in addresses
-        ]
-
-    @api.model
-    def _selection_pending_streets(self):
-        return self._street_options(False, True)
-
-    @api.model
-    def _selection_all_streets(self):
-        return self._street_options(False, False)
-
     @api.onchange('only_pending')
     def _onchange_only_pending(self):
         self.pending_street = False
@@ -57,15 +32,12 @@ class WaterReadingMobileSelector(models.TransientModel):
         readings = self.period_id.reading_ids.sudo()
         selected_filter = self.pending_street if self.only_pending else self.all_street
         if selected_filter:
-            selected_street, selected_number = selected_filter.split('|', 1)
-            selected_street = selected_street.strip().casefold()
-            selected_number = selected_number.strip().casefold()
+            selected_filter = selected_filter.strip().casefold()
             readings = readings.filtered(
                 lambda reading: (
-                    (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
-                    == selected_street
-                    and (reading.meter_id.street_number or '').strip().casefold()
-                    == selected_number
+                    f"{(reading.meter_id.street or reading.meter_id.address or '').strip()} "
+                    f"{(reading.meter_id.street_number or '').strip()}".strip().casefold()
+                    == selected_filter
                 )
             )
         if self.only_pending:

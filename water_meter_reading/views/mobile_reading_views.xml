@@ -16,8 +16,10 @@
           <group>
             <field name="period_id"/>
             <field name="only_pending"/>
-            <field name="pending_street" string="Calle + Nº" invisible="not only_pending"/>
-            <field name="all_street" string="Calle + Nº" invisible="only_pending"/>
+                 <field name="pending_street" string="Calle + Nº" invisible="not only_pending"
+                   placeholder="Escribe calle y número"/>
+                 <field name="all_street" string="Calle + Nº" invisible="only_pending"
+                   placeholder="Escribe calle y número"/>
             <field name="meter_id"
                    options="{'no_create': true, 'no_open': true}"
                    placeholder="Número, abonado, nombre o calle"/>
