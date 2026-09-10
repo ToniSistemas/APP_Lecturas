@@ -9,7 +9,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one(
         'water.reading.mobile.address.option',
-        string='Dirección',
+        string='Calle',
         domain="[('id', 'in', available_address_ids)]",
     )
     available_address_ids = fields.Many2many(
@@ -43,9 +43,9 @@ class WaterReadingMobileSelector(models.TransientModel):
             if wizard.only_pending:
                 readings = readings.filtered(lambda reading: reading.reading_current == 0)
             addresses = sorted({
-                address.strip()
-                for address in readings.mapped('meter_id.address')
-                if address and address.strip()
+                (meter.street or meter.address).strip()
+                for meter in readings.mapped('meter_id')
+                if (meter.street or meter.address) and (meter.street or meter.address).strip()
             }, key=str.casefold)
             address_records = Address.search([
                 ('period_id', '=', wizard.period_id.id),
@@ -53,8 +53,8 @@ class WaterReadingMobileSelector(models.TransientModel):
             ])
             existing_names = set(address_records.mapped('name'))
             address_records |= Address.create([
-                {'period_id': wizard.period_id.id, 'name': address}
-                for address in addresses if address not in existing_names
+                {'period_id': wizard.period_id.id, 'name': street}
+                for street in addresses if street not in existing_names
             ])
             address_records = address_records.filtered(lambda address: address.name in addresses)
             wizard.available_address_ids = [(6, 0, address_records.ids)]
@@ -65,7 +65,10 @@ class WaterReadingMobileSelector(models.TransientModel):
         if self.address_id:
             selected_address = self.address_id.name.strip().casefold()
             readings = readings.filtered(
-                lambda reading: (reading.meter_id.address or '').strip().casefold() == selected_address
+                    lambda reading: (
+                        (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
+                        == selected_address
+                    )
             )
         if self.only_pending:
             readings = readings.filtered(lambda reading: reading.reading_current == 0)

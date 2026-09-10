@@ -17,6 +17,8 @@ class WaterMeter(models.Model):
     meter_number = fields.Char(string='Contador', tracking=True)
     active = fields.Boolean(string='Activo', default=True, tracking=True)
     address = fields.Char(string='Dirección', tracking=True)
+    street = fields.Char(string='Calle', tracking=True)
+    street_number = fields.Char(string='Nº', tracking=True)
     zip = fields.Char(string='C.P.', tracking=True)
     municipality = fields.Char(string='Municipio', tracking=True)
     owner_name = fields.Char(string='Nombre', tracking=True)

@@ -32,7 +32,8 @@
         <field name="owner_name" optional="show"/>
         <field name="subscriber" optional="show"/>
         <field name="meter_type" optional="show"/>
-        <field name="address" optional="show"/>
+        <field name="street" string="Calle" optional="show"/>
+        <field name="street_number" string="Nº" optional="show"/>
         <field name="zip" optional="show"/>
         <field name="municipality" optional="show"/>
       </list>
@@ -74,7 +75,8 @@
               <field name="meter_type"/>
             </group>
             <group>
-              <field name="address"/>
+              <field name="street" string="Calle"/>
+              <field name="street_number" string="Nº"/>
               <field name="zip"/>
               <field name="municipality"/>
             </group>

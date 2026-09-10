@@ -16,11 +16,11 @@
           <group>
             <field name="period_id"/>
             <field name="only_pending"/>
-            <field name="address_id" string="Dirección" options="{'no_create': true}"/>
+            <field name="address_id" string="Calle" options="{'no_create': true}"/>
               <field name="available_address_ids" invisible="1"/>
               <field name="meter_id"
                    options="{'no_create': true, 'no_open': true}"
-                   placeholder="Número, abonado, nombre o dirección"/>
+                   placeholder="Número, abonado, nombre o calle"/>
             <field name="total_count" string="Total contadores" readonly="1"/>
             <field name="read_count" string="Contadores leídos" readonly="1"/>
             <field name="available_count" string="Pendientes" readonly="1"/>
@@ -60,7 +60,8 @@
             </group>
             <group>
               <field name="meter_route" readonly="1"/>
-              <field name="meter_address" readonly="1"/>
+              <field name="meter_street" string="Calle" readonly="1"/>
+              <field name="meter_street_number" string="Nº" readonly="1"/>
               <field name="meter_municipality" readonly="1"/>
             </group>
           </group>
