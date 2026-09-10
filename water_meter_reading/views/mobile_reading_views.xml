@@ -26,14 +26,6 @@
             <field name="read_count" string="Contadores leídos" readonly="1"/>
             <field name="available_count" string="Pendientes" readonly="1"/>
             <field name="available_meter_ids" invisible="1"/>
-            <field name="history_reading_ids" readonly="1" nolabel="1">
-              <list string="Últimas lecturas">
-                <field name="period_id" string="Período"/>
-                <field name="reading_previous" string="Lectura anterior"/>
-                <field name="reading_current" string="Lectura actual"/>
-                <field name="difference" string="Consumo"/>
-              </list>
-            </field>
           </group>
         </sheet>
       </form>
@@ -89,6 +81,17 @@
             <field name="counter_photo" widget="camera_image" nolabel="1"
                    class="o_water_mobile_photo" options="{'size': [240, 240]}"/>
           </div>
+
+          <group string="Últimas lecturas">
+            <field name="history_reading_ids" readonly="1" nolabel="1">
+              <list string="Últimas lecturas">
+                <field name="period_id" string="Período"/>
+                <field name="reading_previous" string="Lectura anterior"/>
+                <field name="reading_current" string="Lectura actual"/>
+                <field name="difference" string="Consumo"/>
+              </list>
+            </field>
+          </group>
 
           <group string="Incidencias del contador">
             <group>
