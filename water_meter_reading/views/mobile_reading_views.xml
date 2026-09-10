@@ -38,10 +38,10 @@
     <field name="arch" type="xml">
       <form string="Lectura móvil" class="o_water_mobile_reading">
         <header>
-          <button name="action_mobile_done" type="object" string="Guardar y volver al selector"
-            icon="fa-check" class="btn-primary"/>
-          <button name="action_mobile_next" type="object" string="Guardar y siguiente"
-            icon="fa-arrow-right" class="btn-secondary"/>
+          <button name="action_mobile_done" type="object" string="Guardar"
+            icon="fa-check" class="btn-primary btn-sm"/>
+          <button name="action_mobile_next" type="object" string="Siguiente"
+            icon="fa-arrow-right" class="btn-secondary btn-sm"/>
         </header>
         <sheet>
           <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"
