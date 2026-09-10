@@ -86,6 +86,7 @@
               <field name="reading_ids">
                 <list editable="bottom" string="Lecturas">
                   <field name="name"/>
+                  <field name="period_id" string="Período"/>
                   <field name="date"/>
                   <field name="allow_edit_previous" column_invisible="1"/>
                   <field name="reading_previous" readonly="not allow_edit_previous"/>
