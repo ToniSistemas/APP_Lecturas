@@ -1,7 +1,23 @@
+.o_water_mobile_selector,
 .o_water_mobile_reading {
     .o_form_sheet {
         max-width: 760px;
     }
+}
+
+.o_water_mobile_selector {
+    .o_form_sheet {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .o_field_widget[name="meter_id"] input {
+        font-size: 1.25rem;
+        min-height: 3rem;
+    }
+}
+
+.o_water_mobile_reading {
 
     .o_water_mobile_heading {
         align-items: center;

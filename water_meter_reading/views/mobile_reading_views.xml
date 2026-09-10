@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <record id="view_water_reading_mobile_selector_form" model="ir.ui.view">
+    <field name="name">water.reading.mobile.selector.form</field>
+    <field name="model">water.reading.mobile.selector</field>
+    <field name="arch" type="xml">
+      <form string="Seleccionar contador" class="o_water_mobile_selector">
+        <header>
+          <button name="action_open_reading" type="object" string="Abrir lectura"
+                  icon="fa-arrow-right" class="btn-primary"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1>Seleccionar contador</h1>
+          </div>
+          <group>
+            <field name="period_id"/>
+            <field name="only_pending"/>
+            <field name="route" options="{'no_create': true}"/>
+            <field name="available_count" readonly="1"/>
+            <field name="available_meter_ids" invisible="1"/>
+            <field name="meter_id"
+                   options="{'no_create': true, 'no_open': true}"
+                   placeholder="Número, abonado, nombre o ruta"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
   <record id="view_water_reading_mobile_form" model="ir.ui.view">
     <field name="name">water.reading.mobile.form</field>
     <field name="model">water.reading</field>
     <field name="arch" type="xml">
       <form string="Lectura móvil" class="o_water_mobile_reading">
         <header>
-          <button name="action_mobile_previous" type="object" string="Anterior"
-                  icon="fa-chevron-left" class="btn-secondary"/>
-          <button name="action_mobile_next" type="object" string="Guardar y siguiente"
-                  icon="fa-chevron-right" class="btn-primary"/>
+          <button name="action_mobile_done" type="object" string="Guardar y volver al selector"
+            icon="fa-check" class="btn-primary"/>
         </header>
         <sheet>
           <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"

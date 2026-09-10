@@ -44,19 +44,17 @@ class WaterReading(models.Model):
     )
     mobile_progress = fields.Char(compute='_compute_mobile_progress', string='Progreso')
 
-    @api.depends('period_id', 'period_id.reading_ids')
+    @api.depends('period_id', 'period_id.reading_ids.reading_current')
     def _compute_mobile_progress(self):
         for rec in self:
             if not rec.period_id:
                 rec.mobile_progress = ''
                 continue
-            ordered_ids = rec.period_id.reading_ids.sorted(
-                key=lambda reading: (reading.meter_route or '', reading.id)
-            ).ids
-            position = ordered_ids.index(rec.id) + 1 if rec.id in ordered_ids else 0
-            rec.mobile_progress = _('%(position)s de %(total)s') % {
-                'position': position,
-                'total': len(ordered_ids),
+            readings = rec.period_id.reading_ids
+            pending = len(readings.filtered(lambda reading: reading.reading_current == 0))
+            rec.mobile_progress = _('%(pending)s pendientes de %(total)s') % {
+                'pending': pending,
+                'total': len(readings),
             }
 
     @api.depends_context('uid')
@@ -137,32 +135,21 @@ class WaterReading(models.Model):
             'context': {'form_view_initial_mode': 'edit'},
         }
 
-    def _mobile_adjacent_action(self, offset):
+    def action_mobile_done(self):
         self.ensure_one()
-        readings = self.search(
-            [('period_id', '=', self.period_id.id)],
-            order='meter_route, id',
-        )
-        position = readings.ids.index(self.id)
-        next_position = position + offset
-        if 0 <= next_position < len(readings):
-            return readings[next_position]._mobile_action()
+        view = self.env.ref('water_meter_reading.view_water_reading_mobile_selector_form')
         return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Recorrido completado') if offset > 0 else _('Primera lectura'),
-                'message': _('No hay más lecturas en esa dirección.'),
-                'type': 'success' if offset > 0 else 'info',
-                'sticky': False,
+            'type': 'ir.actions.act_window',
+            'name': _('Seleccionar contador'),
+            'res_model': 'water.reading.mobile.selector',
+            'views': [(view.id, 'form')],
+            'target': 'current',
+            'context': {
+                'default_period_id': self.period_id.id,
+                'default_route': self.meter_route,
+                'default_only_pending': True,
             },
         }
-
-    def action_mobile_previous(self):
-        return self._mobile_adjacent_action(-1)
-
-    def action_mobile_next(self):
-        return self._mobile_adjacent_action(1)
 
     @api.onchange('meter_id', 'period_id')
     def _onchange_meter_id(self):
