@@ -24,15 +24,13 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     @api.model
     def _street_options(self, period_id, pending):
-        readings = self.env['water.period'].browse(period_id).reading_ids.sudo()
-        if pending:
-            readings = readings.filtered(lambda reading: reading.reading_current == 0)
+        meters = self.env['water.meter'].sudo().with_context(active_test=False).search([])
         addresses = {
             (
                 (meter.street or meter.address).strip(),
                 (meter.street_number or '').strip(),
             )
-            for meter in readings.mapped('meter_id')
+            for meter in meters
             if (meter.street or meter.address) and (meter.street or meter.address).strip()
         }
         addresses = sorted(addresses, key=lambda address: (address[0].casefold(), address[1].casefold()))
@@ -43,13 +41,11 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     @api.model
     def _selection_pending_streets(self):
-        period_id = self.env.context.get('default_period_id')
-        return self._street_options(period_id, True) if period_id else []
+        return self._street_options(False, True)
 
     @api.model
     def _selection_all_streets(self):
-        period_id = self.env.context.get('default_period_id')
-        return self._street_options(period_id, False) if period_id else []
+        return self._street_options(False, False)
 
     @api.onchange('only_pending')
     def _onchange_only_pending(self):
