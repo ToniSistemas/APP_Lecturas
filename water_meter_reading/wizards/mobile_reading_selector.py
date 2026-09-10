@@ -59,18 +59,25 @@ class WaterReadingMobileSelector(models.TransientModel):
             address_records = address_records.filtered(lambda address: address.name in addresses)
             wizard.available_address_ids = [(6, 0, address_records.ids)]
 
+    def _filtered_readings(self):
+        self.ensure_one()
+        readings = self.period_id.reading_ids.sudo()
+        if self.address_id:
+            selected_address = self.address_id.name.strip().casefold()
+            readings = readings.filtered(
+                lambda reading: (reading.meter_id.address or '').strip().casefold() == selected_address
+            )
+        if self.only_pending:
+            readings = readings.filtered(lambda reading: reading.reading_current == 0)
+        return readings
+
     @api.depends('period_id', 'address_id', 'only_pending', 'available_address_ids')
     def _compute_counts(self):
         for wizard in self:
-            readings = wizard.period_id.reading_ids
-            wizard.total_count = len(readings)
-            wizard.read_count = len(readings.filtered(lambda reading: reading.reading_current != 0))
-            if wizard.address_id:
-                readings = readings.filtered(
-                    lambda reading: reading.meter_id.address == wizard.address_id.name
-                )
-            if wizard.only_pending:
-                readings = readings.filtered(lambda reading: reading.reading_current == 0)
+            all_readings = wizard.period_id.reading_ids.sudo()
+            wizard.total_count = len(all_readings)
+            wizard.read_count = len(all_readings.filtered(lambda reading: reading.reading_current != 0))
+            readings = wizard._filtered_readings()
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
@@ -79,11 +86,13 @@ class WaterReadingMobileSelector(models.TransientModel):
         if self.id:
             self._refresh_addresses()
             self.address_id = False
+            self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
             self.meter_id = False
 
     @api.onchange('address_id')
     def _onchange_address(self):
+        self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
             self.meter_id = False
 
