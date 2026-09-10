@@ -10,7 +10,9 @@ class WaterReadingMobileSelector(models.TransientModel):
     route = fields.Selection(selection='_selection_addresses', string='Dirección')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_available_meter_ids')
-    available_count = fields.Integer(compute='_compute_available_meter_ids', string='Disponibles')
+    total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
+    read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
+    available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
     meter_id = fields.Many2one(
         'water.meter',
         string='Contador',
@@ -41,9 +43,11 @@ class WaterReadingMobileSelector(models.TransientModel):
         return [(address, address) for address in addresses if address]
 
     @api.depends('period_id', 'route', 'only_pending')
-    def _compute_available_meter_ids(self):
+    def _compute_counts(self):
         for wizard in self:
             readings = wizard.period_id.reading_ids
+            wizard.total_count = len(readings)
+            wizard.read_count = len(readings.filtered(lambda reading: reading.reading_current != 0))
             if wizard.route:
                 readings = readings.filtered(lambda reading: reading.meter_id.address == wizard.route)
             if wizard.only_pending:

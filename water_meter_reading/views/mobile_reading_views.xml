@@ -17,7 +17,9 @@
             <field name="period_id"/>
             <field name="only_pending"/>
             <field name="route" string="Dirección" options="{'no_create': true}"/>
-            <field name="available_count" readonly="1"/>
+            <field name="total_count" string="Total contadores" readonly="1"/>
+            <field name="read_count" string="Contadores leídos" readonly="1"/>
+            <field name="available_count" string="Pendientes" readonly="1"/>
             <field name="available_meter_ids" invisible="1"/>
             <field name="meter_id"
                    options="{'no_create': true, 'no_open': true}"
