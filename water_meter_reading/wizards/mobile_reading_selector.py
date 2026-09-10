@@ -20,11 +20,22 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     @api.model
     def _selection_addresses(self):
-        meters = self.env['water.meter'].with_context(active_test=False).search([
-            ('address', '!=', False),
-        ])
+        period_id = (
+            self.env.context.get('default_period_id')
+            or self.env.context.get('active_id')
+        )
+        if period_id:
+            period = self.env['water.period'].browse(period_id)
+            meters = period.reading_ids.sudo().mapped('meter_id')
+        else:
+            meters = self.env['water.meter'].sudo().with_context(active_test=False).search([])
+        addresses = {
+            address.strip()
+            for address in meters.mapped('address')
+            if address and address.strip()
+        }
         addresses = sorted(
-            set(meters.mapped('address')),
+            addresses,
             key=lambda address: address.casefold(),
         )
         return [(address, address) for address in addresses if address]
