@@ -23,20 +23,23 @@ class WaterReadingMobileSelector(models.TransientModel):
         domain="[('id', 'in', available_meter_ids)]",
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
+    @api.model
+    def _sync_streets(self):
         Street = self.env['water.reading.mobile.street'].sudo()
         meter_streets = {
             meter.street.strip()
             for meter in self.env['water.meter'].sudo().with_context(active_test=False).search([])
             if meter.street and meter.street.strip()
         }
-        existing = Street.search([('name', 'in', list(meter_streets))])
-        existing_names = set(existing.mapped('name'))
+        existing_names = set(Street.search([('name', 'in', list(meter_streets))]).mapped('name'))
         Street.create([
             {'name': street}
             for street in meter_streets if street not in existing_names
         ])
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        self._sync_streets()
         return super().create(vals_list)
 
     @api.onchange('only_pending')
