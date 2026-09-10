@@ -40,8 +40,6 @@
         <header>
           <button name="action_mobile_done" type="object" string="Guardar"
             icon="fa-check" class="btn-primary btn-sm o_water_mobile_action"/>
-          <button name="action_mobile_next" type="object" string="Siguiente"
-            icon="fa-arrow-right" class="btn-secondary btn-sm o_water_mobile_action"/>
         </header>
         <sheet>
           <widget name="web_ribbon" title="Pendiente" bg_color="text-bg-danger"
@@ -53,6 +51,10 @@
             </div>
             <field name="mobile_progress" readonly="1" nolabel="1"
                    class="o_water_mobile_progress"/>
+          </div>
+          <div class="o_water_mobile_next_action">
+            <button name="action_mobile_next" type="object" string="Siguiente"
+                    icon="fa-arrow-right" class="btn-secondary btn-sm"/>
           </div>
 
           <group string="Ubicación" class="o_water_mobile_location">
