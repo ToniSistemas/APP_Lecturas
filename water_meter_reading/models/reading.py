@@ -158,6 +158,13 @@ class WaterReading(models.Model):
         pending_readings = self.period_id.reading_ids.filtered(
             lambda reading: reading.reading_current == 0 and reading.id != self.id
         )
+        current_street = (self.meter_id.street or self.meter_id.address or '').strip().casefold()
+        pending_readings = pending_readings.filtered(
+            lambda reading: (
+                (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
+                == current_street
+            )
+        )
 
         def route_key(reading):
             route = (reading.meter_route or '').strip()
