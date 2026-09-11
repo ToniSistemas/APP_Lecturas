@@ -6,4 +6,6 @@
     <field name="padding">4</field>
     <field name="prefix">LR/</field>
   </record>
+
+  <function model="res.users" name="_set_water_home_action"/>
 </odoo>
