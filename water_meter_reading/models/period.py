@@ -23,6 +23,7 @@ class WaterPeriod(models.Model):
         string='Año', required=True,
         default=lambda self: fields.Date.today().year,
     )
+    show_unread = fields.Boolean(string='Mostrar solo contadores sin leer', default=False)
     state = fields.Selection([
         ('draft', 'Borrador'),
         ('open', 'Abierto'),

@@ -87,6 +87,7 @@
             <group>
               <field name="trimester"/>
               <field name="year"/>
+              <field name="show_unread"/>
             </group>
             <group>
               <field name="reading_count" string="Contadores registrados"/>
@@ -101,7 +102,7 @@
                         string="Buscar / Filtrar lecturas" class="btn btn-secondary btn-sm"
                         icon="fa-search"/>
               </div>
-              <field name="reading_ids">
+              <field name="reading_ids" domain="[('reading_current', '=', 0)] if show_unread else []">
                 <list string="Lecturas" editable="bottom"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
