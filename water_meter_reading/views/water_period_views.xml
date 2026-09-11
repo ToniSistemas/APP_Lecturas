@@ -102,7 +102,7 @@
                         string="Buscar / Filtrar lecturas" class="btn btn-secondary btn-sm"
                         icon="fa-search"/>
               </div>
-              <field name="reading_ids" domain="show_unread and [('reading_current', '=', 0)] or []">
+              <field name="reading_ids" domain="parent.show_unread and [('reading_current', '=', 0)] or []">
                 <list string="Lecturas" editable="bottom"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
