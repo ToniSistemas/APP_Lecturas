@@ -8,7 +8,7 @@ class WaterReadingMobileAddressOption(models.Model):
 
     name = fields.Char(required=True)
     street = fields.Char(string='Calle', required=True)
-    street_number = fields.Char(string='Nº')
+    street_number = fields.Char(string='Ubicación')
     period_id = fields.Many2one('water.period', required=True, ondelete='cascade', index=True)
 
     _unique_period_address = models.UniqueIndex(
