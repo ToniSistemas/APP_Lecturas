@@ -97,12 +97,7 @@
           </group>
           <notebook>
             <page string="Lecturas" name="readings">
-              <div class="mb-2">
-                <button name="action_view_readings_search" type="object"
-                        string="Aplicar filtro / Ver lecturas" class="btn btn-secondary btn-sm"
-                        icon="fa-search"/>
-              </div>
-              <field name="reading_ids">
+              <field name="reading_ids" invisible="show_unread">
                 <list string="Lecturas" editable="bottom"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
@@ -130,6 +125,20 @@
                       <field name="counter_photo" widget="camera_image" string="Foto"
                             options="{&quot;size&quot;: [64, 64], &quot;zoom&quot;: true}"
                             optional="show"/>
+                </list>
+              </field>
+              <field name="unread_reading_ids" invisible="not show_unread">
+                <list string="Lecturas sin leer" decoration-danger="True">
+                  <field name="meter_id" string="Contador" readonly="1"
+                         options="{'no_open': false, 'open_form_view': true}"/>
+                  <field name="meter_route_link" string="Ruta" readonly="1"/>
+                  <field name="meter_owner_link" string="Nombre" readonly="1"/>
+                  <field name="reading_previous" string="Lectura anterior" readonly="1"/>
+                  <field name="reading_current" string="Lectura actual" readonly="1"/>
+                  <field name="difference" string="Consumo" readonly="1"/>
+                  <field name="observations" readonly="1"/>
+                  <field name="counter_photo" widget="image" string="Foto" readonly="1"
+                         options="{'size': [64, 64], 'zoom': true}"/>
                 </list>
               </field>
             </page>
