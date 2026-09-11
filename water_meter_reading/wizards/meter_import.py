@@ -14,6 +14,7 @@ class WaterMeterImport(models.TransientModel):
     file = fields.Binary(string='Archivo', required=True)
     filename = fields.Char(string='Nombre del archivo')
     period_id = fields.Many2one('water.period', string='Período', required=True)
+    import_readings = fields.Boolean(string='Importar lecturas', default=False, readonly=True)
     confirmation_required = fields.Boolean(readonly=True)
     warning_message = fields.Text(string='Lecturas diferentes', readonly=True)
 
@@ -30,6 +31,8 @@ class WaterMeterImport(models.TransientModel):
         'Municipio': 'municipality',
         'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
+        'Lectura actual': 'reading_current',
+        'Consumo': 'consumption',
     }
     _required_headers = {'Ruta', 'Contador', 'Nombre', 'Abonado'}
 
@@ -165,10 +168,28 @@ class WaterMeterImport(models.TransientModel):
                     raise ValidationError(_('Fila %s: Lectura anterior no puede ser negativa.') % row_number)
             else:
                 previous_reading = False
+            current_reading = values.pop('reading_current', False)
+            imported_consumption = values.pop('consumption', False)
+            if current_reading:
+                try:
+                    current_reading = int(current_reading)
+                except (TypeError, ValueError) as error:
+                    raise ValidationError(_('Fila %s: Lectura actual debe ser un número entero.') % row_number) from error
+                if current_reading < 0:
+                    raise ValidationError(_('Fila %s: Lectura actual no puede ser negativa.') % row_number)
+            else:
+                current_reading = False
+            if imported_consumption:
+                try:
+                    imported_consumption = int(imported_consumption)
+                except (TypeError, ValueError) as error:
+                    raise ValidationError(_('Fila %s: Consumo debe ser un número entero.') % row_number) from error
+            else:
+                imported_consumption = False
             routes.add(values['name'])
             meter_numbers.add(values['meter_number'])
             subscribers.add(values['subscriber'])
-            imported_rows.append((values, previous_reading))
+            imported_rows.append((values, previous_reading, current_reading, imported_consumption))
 
         Meter = self.env['water.meter'].with_context(active_test=False)
         existing_meters = Meter.search([('subscriber', 'in', list(subscribers))])
@@ -191,7 +212,7 @@ class WaterMeterImport(models.TransientModel):
             meter.meter_number: meter
             for meter in Meter.search([('meter_number', 'in', list(meter_numbers))])
         }
-        for values, _previous_reading in imported_rows:
+        for values, _previous_reading, _current_reading, _consumption in imported_rows:
             subscriber_meter = existing_by_subscriber.get(values['subscriber'])
             number_owner = existing_by_number.get(values['meter_number'])
             if number_owner and number_owner != subscriber_meter:
@@ -213,7 +234,7 @@ class WaterMeterImport(models.TransientModel):
                 ])
             }
         mismatches = []
-        for values, imported_previous in imported_rows:
+        for values, imported_previous, _current_reading, _consumption in imported_rows:
             meter = existing_by_subscriber.get(values['subscriber'])
             if not meter or imported_previous is False or meter.id not in previous_by_meter:
                 continue
@@ -246,7 +267,7 @@ class WaterMeterImport(models.TransientModel):
         meters = []
         created_count = 0
         updated_count = 0
-        for values, previous_reading in imported_rows:
+        for values, previous_reading, current_reading, imported_consumption in imported_rows:
             meter = existing_by_subscriber.get(values['subscriber'])
             route_owner = existing_by_route.get(values['name'])
             if route_owner and route_owner != meter:
@@ -298,10 +319,17 @@ class WaterMeterImport(models.TransientModel):
                 reading_values = {}
                 if previous_reading is not False and reading.reading_previous != previous_reading:
                     reading_values['reading_previous'] = previous_reading
+                if self.import_readings and current_reading is not False:
+                    reading_values['reading_current'] = current_reading
                 if meter_event['new_meter']:
                     reading_values.update(meter_event)
                 if reading_values:
                     reading.with_context(skip_meter_replacement=True).write(reading_values)
+                if self.import_readings and imported_consumption is not False:
+                    if reading.difference != imported_consumption:
+                        raise ValidationError(
+                            _('El consumo del contador %s no coincide con el Excel.') % meter.meter_number
+                        )
                 continue
             reading_values = {
                 'meter_id': meter.id,
@@ -311,7 +339,14 @@ class WaterMeterImport(models.TransientModel):
             }
             if previous_reading is not False:
                 reading_values['reading_previous'] = previous_reading
-            Reading.create(reading_values)
+            if self.import_readings and current_reading is not False:
+                reading_values['reading_current'] = current_reading
+            reading = Reading.create(reading_values)
+            if self.import_readings and imported_consumption is not False:
+                if reading.difference != imported_consumption:
+                    raise ValidationError(
+                        _('El consumo del contador %s no coincide con el Excel.') % meter.meter_number
+                    )
             reading_count += 1
 
         if self.period_id.state == 'draft':

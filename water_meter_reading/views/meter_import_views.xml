@@ -4,10 +4,12 @@
     <field name="name">water.meter.import.form</field>
     <field name="model">water.meter.import</field>
     <field name="arch" type="xml">
-      <form string="Importar contadores">
+      <form string="Importar censo">
         <group>
           <field name="period_id" readonly="1"/>
-          <field name="file" filename="filename" string="Archivo CSV o XLSX"/>
+          <field name="import_readings" invisible="1"/>
+          <field name="file" filename="filename"
+                 string="Archivo CSV o XLSX"/>
           <field name="filename" invisible="1"/>
           <field name="confirmation_required" invisible="1"/>
         </group>

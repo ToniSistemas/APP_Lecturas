@@ -85,6 +85,24 @@ class WaterPeriod(models.Model):
             'context': {'default_period_id': self.id},
         }
 
+    def action_open_read_meter_import(self):
+        self.ensure_one()
+        if self.state == 'closed':
+            raise UserError(_('No se puede importar en un período cerrado.'))
+        if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
+            raise AccessError(_('Solo los supervisores pueden importar censos ya leídos.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Importar censo ya leído'),
+            'res_model': 'water.meter.import',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_period_id': self.id,
+                'default_import_readings': True,
+            },
+        }
+
     def action_start_mobile_readings(self):
         self.ensure_one()
         if not self.reading_ids:
