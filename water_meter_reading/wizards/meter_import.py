@@ -50,6 +50,15 @@ class WaterMeterImport(models.TransientModel):
     }
 
     @staticmethod
+    def _expected_consumption(previous_reading, current_reading, reading):
+        if current_reading is False or previous_reading is False:
+            return False
+        consumption = current_reading - previous_reading
+        if reading.meter_reversed and consumption < 0 and reading.meter_max_value > 0:
+            consumption = reading.meter_max_value + 1 - previous_reading + current_reading
+        return consumption
+
+    @staticmethod
     def _normalize_header(value):
         text = ''.join(str(value or '').replace('\xa0', ' ').split()).casefold()
         return ''.join(
@@ -326,9 +335,24 @@ class WaterMeterImport(models.TransientModel):
                 if reading_values:
                     reading.with_context(skip_meter_replacement=True).write(reading_values)
                 if self.import_readings and imported_consumption is not False:
-                    if reading.difference != imported_consumption:
+                    expected_consumption = self._expected_consumption(
+                        previous_reading if previous_reading is not False else reading.reading_previous,
+                        current_reading if current_reading is not False else reading.reading_current,
+                        reading,
+                    )
+                    if expected_consumption != imported_consumption:
                         raise ValidationError(
-                            _('El consumo del contador %s no coincide con el Excel.') % meter.meter_number
+                            _(
+                                'El consumo del contador %(meter)s no coincide: '
+                                'Excel %(imported)s, cálculo %(expected)s '
+                                '(%(previous)s -> %(current)s).'
+                            ) % {
+                                'meter': meter.meter_number,
+                                'imported': imported_consumption,
+                                'expected': expected_consumption,
+                                'previous': previous_reading,
+                                'current': current_reading,
+                            }
                         )
                 continue
             reading_values = {
@@ -343,9 +367,24 @@ class WaterMeterImport(models.TransientModel):
                 reading_values['reading_current'] = current_reading
             reading = Reading.create(reading_values)
             if self.import_readings and imported_consumption is not False:
-                if reading.difference != imported_consumption:
+                expected_consumption = self._expected_consumption(
+                    previous_reading if previous_reading is not False else reading.reading_previous,
+                    current_reading if current_reading is not False else reading.reading_current,
+                    reading,
+                )
+                if expected_consumption != imported_consumption:
                     raise ValidationError(
-                        _('El consumo del contador %s no coincide con el Excel.') % meter.meter_number
+                        _(
+                            'El consumo del contador %(meter)s no coincide: '
+                            'Excel %(imported)s, cálculo %(expected)s '
+                            '(%(previous)s -> %(current)s).'
+                        ) % {
+                            'meter': meter.meter_number,
+                            'imported': imported_consumption,
+                            'expected': expected_consumption,
+                            'previous': previous_reading,
+                            'current': current_reading,
+                        }
                     )
             reading_count += 1
 
