@@ -7,5 +7,6 @@
     <field name="prefix">LR/</field>
   </record>
 
-  <function model="res.users" name="_set_water_home_action"/>
+  <function model="res.users" name="_set_water_home_action"
+            eval="[obj().search([]).ids]"/>
 </odoo>
