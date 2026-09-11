@@ -50,6 +50,14 @@ class WaterPeriod(models.Model):
             rec.pending_count = len(rec.reading_ids.filtered(lambda reading: reading.reading_current == 0))
             rec.read_count = len(rec.reading_ids.filtered(lambda reading: reading.reading_current != 0))
 
+    @api.onchange('show_unread')
+    def _onchange_show_unread(self):
+        return {
+            'domain': {
+                'reading_ids': [('reading_current', '=', 0)] if self.show_unread else [],
+            },
+        }
+
     def _get_previous_period(self):
         """Devuelve el período inmediatamente anterior a este, o False si no existe."""
         t = int(self.trimester)
