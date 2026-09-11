@@ -107,7 +107,7 @@ class WaterPeriod(models.Model):
         self.ensure_one()
         if not self.reading_ids:
             raise UserError(_('Importa primero el censo de contadores del período.'))
-        self.env['water.reading.mobile.selector']._sync_streets()
+        self.env['water.reading.mobile.selector']._sync_streets(self.id)
         view = self.env.ref('water_meter_reading.view_water_reading_mobile_selector_form')
         return {
             'type': 'ir.actions.act_window',

@@ -16,7 +16,8 @@
           <group>
             <field name="period_id"/>
             <field name="only_pending"/>
-                     <field name="street_id" string="Calle"
+            <field name="street_id" string="Calle"
+                   domain="[('period_id', '=', period_id)]"
                    options="{'no_create': true, 'no_open': true}"
                        placeholder="Buscar calle"/>
             <field name="meter_id"

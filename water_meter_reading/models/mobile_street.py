@@ -7,8 +7,9 @@ class WaterReadingMobileStreet(models.Model):
     _rec_name = 'name'
 
     name = fields.Char(required=True)
+    period_id = fields.Many2one('water.period', index=True, ondelete='cascade')
 
-    _unique_name = models.UniqueIndex(
-        '(name)',
-        'La calle ya existe.',
+    _unique_period_name = models.UniqueIndex(
+        '(period_id, name)',
+        'La calle ya existe en este período.',
     )
