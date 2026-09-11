@@ -135,6 +135,9 @@
         <field name="meter_zip" string="Código postal"/>
         <filter string="Sin lectura actual" name="missing_current_reading"
           domain="[('reading_current','=',0)]"/>
+        <filter string="Cerrado" name="meter_closed" domain="[('meter_closed','=',True)]"/>
+        <filter string="Sin contador" name="meter_missing" domain="[('meter_missing','=',True)]"/>
+        <filter string="Roto" name="meter_broken" domain="[('meter_broken','=',True)]"/>
         <filter string="Diferencia negativa" name="negative_diff"
                 domain="[('difference','&lt;',0)]"/>
         <group>

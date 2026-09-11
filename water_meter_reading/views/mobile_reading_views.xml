@@ -100,11 +100,14 @@
               <field name="new_meter"/>
               <field name="previous_meter_number" invisible="not new_meter"/>
               <field name="new_meter_number" invisible="not new_meter" required="new_meter"/>
+              <field name="meter_closed"/>
             </group>
             <group>
               <field name="meter_reversed" string="Contador dio la vuelta"/>
               <field name="meter_max_value"
                      invisible="not meter_reversed" required="meter_reversed"/>
+              <field name="meter_missing"/>
+              <field name="meter_broken"/>
             </group>
           </group>
 

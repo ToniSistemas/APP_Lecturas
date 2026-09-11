@@ -121,6 +121,9 @@
                       <field name="meter_reversed" string="Contador al revés" optional="hide"/>
                       <field name="meter_max_value" string="Valor máximo"
                         invisible="not meter_reversed" required="meter_reversed" optional="hide"/>
+                          <field name="meter_closed" string="Cerrado" optional="hide"/>
+                          <field name="meter_missing" string="Sin contador" optional="hide"/>
+                          <field name="meter_broken" string="Roto" optional="hide"/>
                       <field name="observations" optional="show"/>
                       <field name="counter_photo" widget="camera_image" string="Foto"
                             options="{&quot;size&quot;: [64, 64], &quot;zoom&quot;: true}"

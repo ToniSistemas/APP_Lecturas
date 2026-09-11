@@ -34,6 +34,9 @@ class WaterReading(models.Model):
         default=9999,
         help='Último valor antes de volver a cero. Por ejemplo, 999 para pasar de 980 a 10.',
     )
+    meter_closed = fields.Boolean(string='Cerrado', default=False)
+    meter_missing = fields.Boolean(string='Sin contador', default=False)
+    meter_broken = fields.Boolean(string='Roto', default=False)
     date = fields.Date(string='Fecha', required=True, default=fields.Date.context_today)
     reading_previous = fields.Integer(string='Lectura anterior')
     reading_current = fields.Integer(string='Lectura actual')
