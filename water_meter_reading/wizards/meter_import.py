@@ -311,18 +311,18 @@ class WaterMeterImport(models.TransientModel):
                 'new_meter_number': meter.meter_number if number_changed else False,
                 'meter_number': meter.meter_number,
             }
-            meters.append((meter, previous_reading, meter_event))
+            meters.append((meter, previous_reading, current_reading, imported_consumption, meter_event))
 
         Reading = self.env['water.reading']
         readings_by_meter = {
             reading.meter_id.id: reading
             for reading in Reading.search([
                 ('period_id', '=', self.period_id.id),
-                ('meter_id', 'in', [meter.id for meter, _previous, _event in meters]),
+                ('meter_id', 'in', [meter.id for meter, _previous, _current, _consumption, _event in meters]),
             ])
         }
         reading_count = 0
-        for meter, previous_reading, meter_event in meters:
+        for meter, previous_reading, current_reading, imported_consumption, meter_event in meters:
             reading = readings_by_meter.get(meter.id)
             if reading:
                 reading_values = {}
