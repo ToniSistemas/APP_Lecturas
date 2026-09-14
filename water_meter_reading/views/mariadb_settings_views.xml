@@ -5,6 +5,10 @@
     <field name="model">res.config.settings</field>
     <field name="arch" type="xml">
       <form string="Conexión MariaDB">
+        <header>
+          <button name="action_test_mariadb_connection" type="object"
+                  string="Probar conexión" class="btn-primary"/>
+        </header>
         <sheet>
           <group string="Base de datos de origen">
             <group>
