@@ -66,6 +66,11 @@ class WaterMeterImport(models.TransientModel):
             if not unicodedata.combining(character)
         )
 
+    @staticmethod
+    def _is_placeholder_meter_number(value):
+        value = str(value or '').strip()
+        return bool(value) and not (set(value) - {'0'})
+
     def _read_rows(self):
         self.ensure_one()
         content = base64.b64decode(self.file or b'')
@@ -198,7 +203,7 @@ class WaterMeterImport(models.TransientModel):
                 while values['name'] in routes:
                     values['name'] += '?'
             if values['meter_number'] in meter_numbers:
-                if not self.import_readings:
+                if not self.import_readings and not self._is_placeholder_meter_number(values['meter_number']):
                     raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
                         row_number, values['meter_number']))
                 original_meter_number = values['meter_number']
@@ -274,7 +279,7 @@ class WaterMeterImport(models.TransientModel):
             subscriber_meter = existing_by_subscriber.get(values['subscriber'])
             number_owner = existing_by_number.get(values['meter_number'])
             if number_owner and number_owner != subscriber_meter:
-                if not self.import_readings:
+                if not self.import_readings and not self._is_placeholder_meter_number(values['meter_number']):
                     raise ValidationError(
                         _('El contador %(meter)s ya pertenece al abonado %(subscriber)s.') % {
                             'meter': values['meter_number'],
