@@ -39,12 +39,5 @@
     <field name="target">current</field>
   </record>
 
-  <record id="menu_water_mariadb_settings" model="ir.ui.menu">
-    <field name="name">Conexión MariaDB</field>
-    <field name="parent_id" ref="menu_water_root"/>
-    <field name="action" ref="action_water_meter_mariadb_settings"/>
-    <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
-    <field name="sequence">10</field>
-    <field name="active" eval="False"/>
-  </record>
+  <delete id="menu_water_mariadb_settings" model="ir.ui.menu"/>
 </odoo>
