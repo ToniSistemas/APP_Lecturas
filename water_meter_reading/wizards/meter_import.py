@@ -241,12 +241,18 @@ class WaterMeterImport(models.TransientModel):
             subscriber_meter = existing_by_subscriber.get(values['subscriber'])
             number_owner = existing_by_number.get(values['meter_number'])
             if number_owner and number_owner != subscriber_meter:
-                raise ValidationError(
-                    _('El contador %(meter)s ya pertenece al abonado %(subscriber)s.') % {
-                        'meter': values['meter_number'],
-                        'subscriber': number_owner.subscriber or '-',
-                    }
-                )
+                if not self.import_readings:
+                    raise ValidationError(
+                        _('El contador %(meter)s ya pertenece al abonado %(subscriber)s.') % {
+                            'meter': values['meter_number'],
+                            'subscriber': number_owner.subscriber or '-',
+                        }
+                    )
+                original_meter_number = values['meter_number']
+                values['meter_number'] = f'{original_meter_number}?'
+                while values['meter_number'] in existing_by_number or values['meter_number'] in meter_numbers:
+                    values['meter_number'] += '?'
+                meter_numbers.add(values['meter_number'])
 
         previous_period = self.period_id._get_previous_period()
         previous_by_meter = {}
