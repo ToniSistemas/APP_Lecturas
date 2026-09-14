@@ -116,7 +116,7 @@ class WaterMeterMariaDBConnection(models.Model):
                         'calle': expression('calle', 'Calle', 'OBJ_ENTIDADCOLECTIVA'),
                         'ubicacion': location,
                         'tipo': expression('tipo', 'Tipo de contador', 'Tipo_contador'),
-                        'anterior': expression('anterior', 'Lectura anterior', 'Lectura_anterior'),
+                        'anterior': expression('anterior', 'Lectura anterior', 'Lectura_anterior', 'lectura_ant'),
                         'actual': expression('actual', 'Lectura actual', 'Lectura_actual', 'lectura_act'),
                         'consumo': expression('consumo', 'Consumo'),
                         'ejercicio': self._quote_column(required['exercise']),
