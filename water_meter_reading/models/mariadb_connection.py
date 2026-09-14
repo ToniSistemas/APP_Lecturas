@@ -56,6 +56,16 @@ class WaterMeterMariaDBConnection(models.Model):
             display_query = display_query.replace('%s', replacement, 1)
         return display_query
 
+    @staticmethod
+    def _normalize_sql_start(query):
+        query = query.lstrip('\ufeff \t\r\n')
+        while True:
+            without_block_comment = re.sub(r'^/\*.*?\*/', '', query, count=1, flags=re.S).lstrip()
+            without_line_comment = re.sub(r'^(?:--|#)[^\r\n]*(?:\r?\n|$)', '', without_block_comment, count=1).lstrip()
+            if without_line_comment == query:
+                return query
+            query = without_line_comment
+
     def fetch_readings(self, year, trimester):
         self.ensure_one()
         try:
@@ -156,8 +166,8 @@ class WaterMeterMariaDBConnection(models.Model):
                     }
                 query = self.sql_query.strip() if self.sql_query and self.sql_query.strip() else generated_query
                 query_params = (year, trimester)
-                normalized_query = query.lstrip().casefold()
-                if not (normalized_query.startswith('select ') or normalized_query.startswith('with ')):
+                normalized_query = self._normalize_sql_start(query).casefold()
+                if not re.match(r'^(select|with)\b', normalized_query):
                     raise UserError(_('La consulta personalizada debe comenzar por SELECT o WITH.'))
                 if ';' in query.rstrip().rstrip(';'):
                     raise UserError(_('La consulta personalizada no puede contener varias sentencias.'))
