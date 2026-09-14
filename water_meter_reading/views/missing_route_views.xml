@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_meter_missing_route_form" model="ir.ui.view">
+    <field name="name">water.meter.missing.route.form</field>
+    <field name="model">water.meter.missing.route</field>
+    <field name="arch" type="xml">
+      <form string="Asignar rutas faltantes">
+        <group>
+          <field name="import_id" invisible="1"/>
+          <field name="line_ids" nolabel="1">
+            <list editable="bottom">
+              <field name="row_number"/>
+              <field name="meter_number"/>
+              <field name="owner_name"/>
+              <field name="subscriber"/>
+              <field name="street"/>
+              <field name="location"/>
+              <field name="route"/>
+            </list>
+          </field>
+        </group>
+        <footer>
+          <button name="action_continue" type="object" string="Continuar importación" class="btn-primary"/>
+          <button string="Cancelar" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>

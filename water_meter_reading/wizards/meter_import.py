@@ -118,6 +118,32 @@ class WaterMeterImport(models.TransientModel):
             {self._normalize_header(header): value for header, value in row.items()}
             for row in rows
         ]
+        missing_route_values = self.env.context.get('missing_routes', {})
+        missing_route_lines = []
+        for row_number, row in enumerate(normalized_rows, start=2):
+            route = str(row.get(self._normalize_header('Ruta'), '') or '').strip()
+            if not route and row_number not in missing_route_values:
+                missing_route_lines.append({
+                    'row_number': row_number,
+                    'meter_number': row.get(self._normalize_header('Contador'), ''),
+                    'owner_name': row.get(self._normalize_header('Nombre'), ''),
+                    'subscriber': row.get(self._normalize_header('Abonado'), ''),
+                    'street': row.get(self._normalize_header('Calle'), ''),
+                    'location': row.get(self._normalize_header('Ubicación'), ''),
+                })
+        if missing_route_lines:
+            route_wizard = self.env['water.meter.missing.route'].create({
+                'import_id': self.id,
+                'line_ids': [(0, 0, line) for line in missing_route_lines],
+            })
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _('Completar rutas faltantes'),
+                'res_model': 'water.meter.missing.route',
+                'res_id': route_wizard.id,
+                'view_mode': 'form',
+                'target': 'new',
+            }
         required_headers = {self._normalize_header(header) for header in self._required_headers}
         missing_headers = required_headers - set(normalized_rows[0])
         if missing_headers:
@@ -144,6 +170,8 @@ class WaterMeterImport(models.TransientModel):
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
+            if not values['name'] and row_number in missing_route_values:
+                values['name'] = missing_route_values[row_number]
             if self.import_readings and not values['name']:
                 values['name'] = '?'
             missing_fields = [
