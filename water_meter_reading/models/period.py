@@ -76,14 +76,21 @@ class WaterPeriod(models.Model):
         self.ensure_one()
         if self.state == 'closed':
             raise UserError(_('No se puede importar el censo en un período cerrado.'))
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Importar censo de contadores'),
-            'res_model': 'water.meter.import',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_period_id': self.id},
-        }
+        connection = self.env['water.mariadb.connection'].search([('active', '=', True)], limit=1)
+        if not connection:
+            raise UserError(_('Configura primero una conexión MariaDB activa.'))
+        rows = connection.fetch_readings(int(self.year), int(self.trimester))
+        if not rows:
+            raise UserError(_('No hay datos en MariaDB para %(year)s, período %(period)s.') % {
+                'year': self.year,
+                'period': self.trimester,
+            })
+        return self.env['water.meter.import'].with_context(
+            default_period_id=self.id,
+        ).create({
+            'period_id': self.id,
+            'import_readings': False,
+        }).action_import_rows(rows, import_readings=False)
 
     def action_open_read_meter_import(self):
         self.ensure_one()
@@ -106,7 +113,7 @@ class WaterPeriod(models.Model):
         ).create({
             'period_id': self.id,
             'import_readings': True,
-        }).action_import_rows(rows)
+        }).action_import_rows(rows, import_readings=True)
 
 
     def action_start_mobile_readings(self):

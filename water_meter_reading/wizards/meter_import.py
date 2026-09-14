@@ -443,7 +443,7 @@ class WaterMeterImport(models.TransientModel):
             },
         }
 
-    def action_import_rows(self, rows):
+    def action_import_rows(self, rows, import_readings=False):
         self.ensure_one()
         headers = {
             'ruta': 'Ruta',
@@ -469,6 +469,6 @@ class WaterMeterImport(models.TransientModel):
         self.write({
             'file': base64.b64encode(output.getvalue().encode('utf-8')),
             'filename': 'lecturas_mariadb.csv',
-            'import_readings': True,
+            'import_readings': import_readings,
         })
         return self.action_import()
