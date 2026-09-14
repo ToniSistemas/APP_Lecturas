@@ -164,11 +164,13 @@ class WaterMeterMariaDBConnection(models.Model):
                         'ejercicio': self._quote_column(required['exercise']),
                         'periodo': self._quote_column(required['period']),
                     }
-                query = self.sql_query.strip() if self.sql_query and self.sql_query.strip() else generated_query
+                custom_query = self._normalize_sql_start(self.sql_query or '').strip()
+                query = custom_query or generated_query
                 query_params = (year, trimester)
                 normalized_query = self._normalize_sql_start(query).casefold()
                 if not re.match(r'^(select|with)\b', normalized_query):
-                    raise UserError(_('La consulta personalizada debe comenzar por SELECT o WITH.'))
+                    query_type = 'personalizada' if custom_query else 'automática'
+                    raise UserError(_('La consulta %s debe comenzar por SELECT o WITH.') % query_type)
                 if ';' in query.rstrip().rstrip(';'):
                     raise UserError(_('La consulta personalizada no puede contener varias sentencias.'))
                 forbidden = re.search(r'\b(insert|update|delete|drop|alter|truncate|create|replace|grant|revoke)\b', normalized_query)
