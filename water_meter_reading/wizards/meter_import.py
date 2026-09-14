@@ -269,7 +269,7 @@ class WaterMeterImport(models.TransientModel):
         existing_by_subscriber = {meter.subscriber: meter for meter in existing_meters}
         existing_by_route = {
             meter.name: meter
-            for meter in Meter.search([('name', 'in', list(routes))])
+            for meter in Meter.search([])
         }
         existing_by_number = {
             meter.meter_number: meter
@@ -277,6 +277,20 @@ class WaterMeterImport(models.TransientModel):
         }
         for values, _previous_reading, _current_reading, _consumption in imported_rows:
             subscriber_meter = existing_by_subscriber.get(values['subscriber'])
+            route_owner = existing_by_route.get(values['name']) if values['name'] != '?' else None
+            if route_owner and route_owner != subscriber_meter:
+                if not self.import_readings:
+                    raise ValidationError(
+                        _('La ruta %(route)s ya pertenece al contador %(meter)s.') % {
+                            'route': values['name'],
+                            'meter': route_owner.meter_number,
+                        }
+                    )
+                original_route = values['name']
+                values['name'] = f'{original_route}?'
+                while values['name'] in existing_by_route or values['name'] in routes:
+                    values['name'] += '?'
+                routes.add(values['name'])
             number_owner = existing_by_number.get(values['meter_number'])
             if number_owner and number_owner != subscriber_meter:
                 if not self.import_readings and not self._is_placeholder_meter_number(values['meter_number']):
