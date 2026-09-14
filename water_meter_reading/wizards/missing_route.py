@@ -29,4 +29,4 @@ class WaterMeterMissingRouteLine(models.TransientModel):
     subscriber = fields.Char(string='Abonado', readonly=True)
     street = fields.Char(string='Calle', readonly=True)
     location = fields.Char(string='Ubicación', readonly=True)
-    route = fields.Char(string='Ruta', required=True)
+    route = fields.Char(string='Ruta')
