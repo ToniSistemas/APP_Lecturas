@@ -11,10 +11,10 @@ class WaterMeterMissingRoute(models.TransientModel):
 
     def action_continue(self):
         self.ensure_one()
-        missing = self.line_ids.filtered(lambda line: not line.route.strip())
+        missing = self.line_ids.filtered(lambda line: not (line.route or '').strip())
         if missing:
             raise ValidationError(_('Completa todas las rutas antes de continuar.'))
-        route_values = {line.row_number: line.route.strip() for line in self.line_ids}
+        route_values = {line.row_number: (line.route or '').strip() for line in self.line_ids}
         return self.import_id.with_context(missing_routes=route_values).action_import()
 
 
