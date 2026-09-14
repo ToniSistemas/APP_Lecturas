@@ -162,8 +162,13 @@ class WaterMeterImport(models.TransientModel):
                     )
                 )
             if values['name'] != '?' and values['name'] in routes:
-                raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
-                    row_number, values['name']))
+                if not self.import_readings:
+                    raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
+                        row_number, values['name']))
+                original_route = values['name']
+                values['name'] = f'{original_route}?'
+                while values['name'] in routes:
+                    values['name'] += '?'
             if values['meter_number'] in meter_numbers:
                 if not self.import_readings:
                     raise ValidationError(_('Fila %s: el contador %s está repetido en el archivo.') % (
