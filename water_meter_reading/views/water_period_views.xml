@@ -65,6 +65,11 @@
           <button name="action_export_excel" type="object"
                   string="Exportar Excel" class="btn btn-secondary"
                   icon="fa-download"/>
+            <button name="action_review_anomalies" type="object"
+              string="Revisar anomalías" class="btn btn-secondary"
+              icon="fa-exclamation-triangle"
+              groups="water_meter_reading.group_water_supervisor"
+              invisible="not reading_ids"/>
           <button name="action_close" type="object"
                   string="Cerrar período"
                   invisible="state != 'open'"/>

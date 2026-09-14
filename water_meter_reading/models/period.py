@@ -134,6 +134,25 @@ class WaterPeriod(models.Model):
             },
         }
 
+    def action_review_anomalies(self):
+        self.ensure_one()
+        self.reading_ids._refresh_anomalies()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Anomalías - %s') % self.name,
+            'res_model': 'water.reading',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('water_meter_reading.view_water_reading_list').id, 'list'),
+                (self.env.ref('water_meter_reading.view_water_reading_form').id, 'form'),
+            ],
+            'domain': [
+                ('period_id', '=', self.id),
+                ('anomaly_severity', '!=', 'none'),
+            ],
+            'context': {'search_default_pending_anomaly_review': 1},
+        }
+
     def action_generate_readings(self):
         self.ensure_one()
         if self.state == 'closed':

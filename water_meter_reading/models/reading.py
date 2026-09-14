@@ -51,6 +51,22 @@ class WaterReading(models.Model):
         string='Puede editar lectura anterior',
     )
     mobile_progress = fields.Char(compute='_compute_mobile_progress', string='Progreso')
+    anomaly_severity = fields.Selection([
+        ('none', 'Sin anomalía'),
+        ('medium', 'Media'),
+        ('high', 'Alta'),
+        ('critical', 'Crítica'),
+    ], string='Gravedad', default='none', readonly=True, index=True)
+    anomaly_reason = fields.Text(string='Motivo de revisión', readonly=True)
+    review_status = fields.Selection([
+        ('pending', 'Pendiente'),
+        ('reviewed', 'Revisada'),
+        ('corrected', 'Corregida'),
+        ('justified', 'Justificada'),
+    ], string='Estado de revisión', default='pending', index=True)
+    review_note = fields.Text(string='Nota de revisión')
+    reviewed_by = fields.Many2one('res.users', string='Revisada por', readonly=True)
+    reviewed_at = fields.Datetime(string='Fecha de revisión', readonly=True)
 
     @api.depends('meter_id', 'meter_route', 'meter_owner_name')
     def _compute_meter_links(self):
@@ -111,6 +127,91 @@ class WaterReading(models.Model):
                 # Rollover: (max+1 - anterior) + actual
                 diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
             rec.difference = diff
+
+    def _get_anomaly_values(self):
+        self.ensure_one()
+        severity = 'none'
+        reasons = []
+
+        def add_reason(level, reason):
+            nonlocal severity
+            priorities = {'none': 0, 'medium': 1, 'high': 2, 'critical': 3}
+            if priorities[level] > priorities[severity]:
+                severity = level
+            reasons.append(reason)
+
+        if self.reading_current == 0:
+            add_reason('medium', _('Lectura actual pendiente o igual a cero.'))
+        elif self.difference < 0:
+            add_reason('critical', _('La lectura actual es inferior a la anterior.'))
+        elif self.reading_previous > 0 and self.reading_current == self.reading_previous:
+            add_reason('medium', _('La lectura no ha cambiado desde el período anterior.'))
+
+        history_domain = [
+            ('meter_id', '=', self.meter_id.id),
+            ('id', '!=', self.id),
+            ('reading_current', '>', 0),
+            ('difference', '>', 0),
+        ]
+        if self.period_id:
+            history_domain += [
+                '|',
+                ('period_id.year', '<', self.period_id.year),
+                '&',
+                ('period_id.year', '=', self.period_id.year),
+                ('period_id.trimester', '<', self.period_id.trimester),
+            ]
+        history = self.search(history_domain, order='date desc, id desc', limit=4)
+        historical_average = sum(history.mapped('difference')) / len(history) if history else 0
+        if self.difference > 0 and historical_average:
+            if self.difference >= 100 and self.difference >= historical_average * 5:
+                add_reason(
+                    'critical',
+                    _('Consumo %(current)s: supera cinco veces la media histórica (%(average).1f).') % {
+                        'current': self.difference,
+                        'average': historical_average,
+                    },
+                )
+            elif self.difference >= 50 and self.difference >= historical_average * 3:
+                add_reason(
+                    'high',
+                    _('Consumo %(current)s: supera tres veces la media histórica (%(average).1f).') % {
+                        'current': self.difference,
+                        'average': historical_average,
+                    },
+                )
+        elif self.difference >= 500:
+            add_reason('critical', _('Consumo muy elevado sin histórico suficiente: %s.') % self.difference)
+        elif self.difference >= 100:
+            add_reason('high', _('Consumo elevado sin histórico suficiente: %s.') % self.difference)
+
+        if self.meter_missing:
+            add_reason('high', _('El suministro está marcado sin contador.'))
+        if self.meter_broken:
+            add_reason('high', _('El contador está marcado como roto.'))
+        if severity in ('high', 'critical') and not self.counter_photo and not self.photo_ids:
+            reasons.append(_('La incidencia no tiene fotografía.'))
+
+        return {
+            'anomaly_severity': severity,
+            'anomaly_reason': '\n'.join(reasons) if reasons else False,
+        }
+
+    def _refresh_anomalies(self):
+        for reading in self:
+            values = reading._get_anomaly_values()
+            anomaly_changed = (
+                reading.anomaly_severity != values['anomaly_severity']
+                or reading.anomaly_reason != values['anomaly_reason']
+            )
+            if anomaly_changed and reading.review_status != 'pending':
+                values.update({
+                    'review_status': 'pending',
+                    'reviewed_by': False,
+                    'reviewed_at': False,
+                })
+            reading.write(values)
+        return True
 
     @api.onchange('reading_current', 'reading_previous', 'meter_reversed')
     def _onchange_reading_order(self):
@@ -333,6 +434,11 @@ class WaterReading(models.Model):
         return records
 
     def write(self, vals):
+        if 'review_status' in vals:
+            if vals['review_status'] == 'pending':
+                vals.update({'reviewed_by': False, 'reviewed_at': False})
+            else:
+                vals.update({'reviewed_by': self.env.user.id, 'reviewed_at': fields.Datetime.now()})
         result = super().write(vals)
         if not self.env.context.get('skip_meter_replacement') and {
             'new_meter', 'new_meter_number'
