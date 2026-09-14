@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_meter_mariadb_settings" model="ir.ui.view">
+    <field name="name">water.meter.mariadb.settings.form</field>
+    <field name="model">res.config.settings</field>
+    <field name="arch" type="xml">
+      <form string="Conexión MariaDB">
+        <sheet>
+          <group string="Base de datos de origen">
+            <group>
+              <field name="mariadb_host"/>
+              <field name="mariadb_port"/>
+              <field name="mariadb_database"/>
+            </group>
+            <group>
+              <field name="mariadb_user"/>
+              <field name="mariadb_password" password="True"/>
+            </group>
+          </group>
+          <footer>
+            <button name="action_test_mariadb_connection" type="object"
+                    string="Probar conexión" class="btn-primary"/>
+            <button string="Guardar" type="object" name="execute" class="btn-secondary"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_water_meter_mariadb_settings" model="ir.actions.act_window">
+    <field name="name">Conexión MariaDB</field>
+    <field name="res_model">res.config.settings</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_water_meter_mariadb_settings"/>
+    <field name="target">current</field>
+  </record>
+
+  <menuitem id="menu_water_mariadb_settings"
+            name="Conexión MariaDB"
+            parent="menu_water_root"
+            action="action_water_meter_mariadb_settings"
+            groups="base.group_system"
+            sequence="10"/>
+</odoo>

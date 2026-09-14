@@ -1,12 +1,12 @@
 {
     'name': 'Water Meter Readings',
-    'version': '19.0.12.4.0',
+    'version': '19.0.13.0.0',
     'summary': 'Registro de lecturas de contadores de agua',
     'category': 'Tools',
     'author': 'Toni',
     'license': 'LGPL-3',
     'depends': ['base', 'mail'],
-    'external_dependencies': {'python': ['openpyxl']},
+    'external_dependencies': {'python': ['openpyxl', 'pymysql']},
     'assets': {
         'web.assets_backend': [
             'water_meter_reading/static/src/js/camera_image_field.js',
@@ -22,6 +22,7 @@
         'views/mobile_reading_views.xml',
         'views/water_period_views.xml',
         'views/meter_import_views.xml',
+        'views/mariadb_settings_views.xml',
         'data/sequence_data.xml',
     ],
     'installable': True,
