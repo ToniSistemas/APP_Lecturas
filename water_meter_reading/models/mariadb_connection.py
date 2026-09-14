@@ -86,11 +86,26 @@ class WaterMeterMariaDBConnection(models.Model):
                         'PLANTA', 'ESCALERA', 'PUERTA',
                     )
                 ]
-                location_columns = [column for column in location_columns if column]
+                location_columns = list(dict.fromkeys(
+                    column for column in location_columns if column
+                ))
+                location_parts = []
+                previous_columns = []
+                for column in location_columns:
+                    quoted_column = self._quote_column(column)
+                    duplicate_condition = ' OR '.join(
+                        '%s = %s' % (quoted_column, self._quote_column(previous))
+                        for previous in previous_columns
+                    )
+                    value = (
+                        'CASE WHEN %s THEN NULL ELSE %s END' % (duplicate_condition, quoted_column)
+                        if duplicate_condition else quoted_column
+                    )
+                    location_parts.append("NULLIF(%s, '')" % value)
+                    previous_columns.append(column)
                 location = (
                     'CONCAT_WS(\', \', %s)' % ', '.join(
-                        "NULLIF(%s, '')" % self._quote_column(column)
-                        for column in location_columns
+                        location_parts
                     )
                     if location_columns else 'NULL'
                 )
