@@ -46,8 +46,9 @@
             <field name="last_test_message" readonly="1"/>
           </group>
           <group string="Consulta SQL">
-            <field name="sql_query" placeholder="SELECT ... WHERE Ejercicio = %s AND periodo = %s"/>
-            <field name="last_sql_query" readonly="1"/>
+            <field name="sql_query"
+                   placeholder="Opcional: SELECT ... WHERE Ejercicio = %s AND periodo = %s"/>
+            <field name="last_sql_query" readonly="1" widget="text"/>
           </group>
         </sheet>
       </form>

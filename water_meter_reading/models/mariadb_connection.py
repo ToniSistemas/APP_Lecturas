@@ -20,8 +20,15 @@ class WaterMeterMariaDBConnection(models.Model):
     last_test_ok = fields.Boolean(string='Última prueba correcta', readonly=True)
     last_test_message = fields.Text(string='Resultado de la última prueba', readonly=True)
     last_test_date = fields.Datetime(string='Última prueba', readonly=True)
-    sql_query = fields.Text(string='Consulta SQL personalizada')
-    last_sql_query = fields.Text(string='Última consulta ejecutada', readonly=True)
+    sql_query = fields.Text(
+        string='Consulta SQL personalizada',
+        help='Opcional. Si está vacía se utiliza la consulta automática del módulo.',
+    )
+    last_sql_query = fields.Text(
+        string='Última consulta ejecutada',
+        readonly=True,
+        help='SQL efectivo con Ejercicio y periodo sustituidos, listo para copiar.',
+    )
 
     @staticmethod
     def _normalize_column(name):
@@ -40,6 +47,14 @@ class WaterMeterMariaDBConnection(models.Model):
     @staticmethod
     def _quote_column(column):
         return '`%s`' % column.replace('`', '``')
+
+    @staticmethod
+    def _query_for_display(query, params):
+        display_query = query
+        for value in params:
+            replacement = str(value) if isinstance(value, int) else "'%s'" % str(value).replace("'", "''")
+            display_query = display_query.replace('%s', replacement, 1)
+        return display_query
 
     def fetch_readings(self, year, trimester):
         self.ensure_one()
@@ -139,7 +154,8 @@ class WaterMeterMariaDBConnection(models.Model):
                         'ejercicio': self._quote_column(required['exercise']),
                         'periodo': self._quote_column(required['period']),
                     }
-                query = self.sql_query.strip() if self.sql_query else generated_query
+                query = self.sql_query.strip() if self.sql_query and self.sql_query.strip() else generated_query
+                query_params = (year, trimester)
                 normalized_query = query.lstrip().casefold()
                 if not (normalized_query.startswith('select ') or normalized_query.startswith('with ')):
                     raise UserError(_('La consulta personalizada debe comenzar por SELECT o WITH.'))
@@ -148,8 +164,10 @@ class WaterMeterMariaDBConnection(models.Model):
                 forbidden = re.search(r'\b(insert|update|delete|drop|alter|truncate|create|replace|grant|revoke)\b', normalized_query)
                 if forbidden:
                     raise UserError(_('La consulta contiene una operación no permitida: %s.') % forbidden.group(1))
-                self.sudo().write({'last_sql_query': query})
-                cursor.execute(query, (year, trimester))
+                self.sudo().write({
+                    'last_sql_query': self._query_for_display(query, query_params),
+                })
+                cursor.execute(query, query_params)
                 return cursor.fetchall()
         except Exception as error:
             raise UserError(_('No se pudo leer la tabla lecturas: %s') % error) from error
