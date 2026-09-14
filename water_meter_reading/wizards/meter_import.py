@@ -38,11 +38,13 @@ class WaterMeterImport(models.TransientModel):
 
     _meter_types = {
         'DOM': 'dom',
+        'DOME': 'dom',
         'DOMESTICO': 'dom',
         'DOMÉSTICO': 'dom',
         'ASIM': 'asim',
         'ASIMILADO': 'asim',
         'NDOM': 'ndom',
+        'NDOMV': 'ndom',
         'NO DOMESTICO': 'ndom',
         'NO DOMÉSTICO': 'ndom',
         'ESP': 'esp',
@@ -217,7 +219,10 @@ class WaterMeterImport(models.TransientModel):
                 meter_type = values['meter_type'].upper()
                 if meter_type and meter_type not in self._meter_types:
                     raise ValidationError(
-                        _('Fila %s: Tipo de contador debe ser DOM, ASIM, NDOM o ESP.') % row_number
+                        _(
+                            'Fila %s: Tipo de contador debe ser DOME/DOM, '
+                            'NDOMV/NDOM, ASIM o ESP.'
+                        ) % row_number
                     )
                 values['meter_type'] = self._meter_types.get(meter_type, False)
             previous_reading = values.pop('reading_previous', False)
@@ -509,8 +514,17 @@ class WaterMeterImport(models.TransientModel):
         writer = csv.DictWriter(output, fieldnames=list(headers.values()))
         writer.writeheader()
         for row in rows:
+            normalized_row = {
+                self._normalize_header(key): value
+                for key, value in row.items()
+            }
             writer.writerow({
-                headers[key]: row.get(key, '')
+                headers[key]: (
+                    normalized_row.get(self._normalize_header('tipocanon'), '')
+                    if key == 'tipo_contador'
+                    and not normalized_row.get(self._normalize_header(key))
+                    else normalized_row.get(self._normalize_header(key), '')
+                )
                 for key in headers
             })
         self.write({
