@@ -142,7 +142,9 @@
                 domain="[('difference','&lt;',0)]"/>
         <separator/>
         <filter string="Pendientes de revisión" name="pending_anomaly_review"
-          domain="[('review_status','=','pending')]"/>
+          domain="[('review_status','=','pending'),('anomaly_unchanged','=',False)]"/>
+        <filter string="Lectura sin cambios" name="unchanged_anomalies"
+          domain="[('anomaly_unchanged','=',True)]"/>
         <filter string="Críticas" name="critical_anomalies"
           domain="[('anomaly_severity','=','critical')]"/>
         <filter string="Altas" name="high_anomalies"
@@ -180,6 +182,7 @@
         <field name="reading_current"/>
         <field name="difference"/>
         <field name="anomaly_severity"/>
+        <field name="anomaly_unchanged" column_invisible="1"/>
         <field name="anomaly_reason" optional="show"/>
         <field name="review_status"/>
         <field name="review_note" optional="show"/>

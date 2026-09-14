@@ -58,6 +58,7 @@ class WaterReading(models.Model):
         ('critical', 'Crítica'),
     ], string='Gravedad', default='none', readonly=True, index=True)
     anomaly_reason = fields.Text(string='Motivo de revisión', readonly=True)
+    anomaly_unchanged = fields.Boolean(string='Lectura sin cambios', readonly=True, index=True)
     review_status = fields.Selection([
         ('pending', 'Pendiente'),
         ('reviewed', 'Revisada'),
@@ -132,6 +133,7 @@ class WaterReading(models.Model):
         self.ensure_one()
         severity = 'none'
         reasons = []
+        unchanged = False
 
         def add_reason(level, reason):
             nonlocal severity
@@ -145,6 +147,7 @@ class WaterReading(models.Model):
         elif self.difference < 0:
             add_reason('critical', _('La lectura actual es inferior a la anterior.'))
         elif self.reading_previous > 0 and self.reading_current == self.reading_previous:
+            unchanged = True
             add_reason('medium', _('La lectura no ha cambiado desde el período anterior.'))
 
         history_domain = [
@@ -195,6 +198,7 @@ class WaterReading(models.Model):
         return {
             'anomaly_severity': severity,
             'anomaly_reason': '\n'.join(reasons) if reasons else False,
+            'anomaly_unchanged': unchanged,
         }
 
     def _refresh_anomalies(self):
@@ -203,6 +207,7 @@ class WaterReading(models.Model):
             anomaly_changed = (
                 reading.anomaly_severity != values['anomaly_severity']
                 or reading.anomaly_reason != values['anomaly_reason']
+                or reading.anomaly_unchanged != values['anomaly_unchanged']
             )
             if anomaly_changed and reading.review_status != 'pending':
                 values.update({
