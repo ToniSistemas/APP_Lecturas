@@ -30,6 +30,7 @@ class WaterMeterMariaDBSettings(models.TransientModel):
 
     def action_test_mariadb_connection(self):
         self.ensure_one()
+        self.execute()
         try:
             import pymysql
         except ImportError as error:
