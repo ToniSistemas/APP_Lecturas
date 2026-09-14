@@ -68,7 +68,7 @@
             <button name="action_review_anomalies" type="object"
               string="Revisar anomalías" class="btn btn-secondary"
               icon="fa-exclamation-triangle"
-              groups="water_meter_reading.group_water_supervisor"
+              groups="water_meter_reading.group_water_user"
               invisible="not reading_ids"/>
           <button name="action_close" type="object"
                   string="Cerrar período"
