@@ -338,11 +338,14 @@ class WaterMeterImport(models.TransientModel):
             ])
         }
         reading_count = 0
+        updated_reading_count = 0
         for meter, previous_reading, current_reading, imported_consumption, meter_event in meters:
             reading = readings_by_meter.get(meter.id)
             if reading:
                 reading_values = {}
-                if previous_reading is not False and reading.reading_previous != previous_reading:
+                if self.import_readings and previous_reading is not False:
+                    reading_values['reading_previous'] = previous_reading
+                elif previous_reading is not False and reading.reading_previous != previous_reading:
                     reading_values['reading_previous'] = previous_reading
                 if self.import_readings and current_reading is not False:
                     reading_values['reading_current'] = current_reading
@@ -350,6 +353,7 @@ class WaterMeterImport(models.TransientModel):
                     reading_values.update(meter_event)
                 if reading_values:
                     reading.with_context(skip_meter_replacement=True).write(reading_values)
+                    updated_reading_count += 1
                 if self.import_readings and imported_consumption is not False:
                     expected_consumption = self._expected_consumption(
                         previous_reading if previous_reading is not False else reading.reading_previous,
@@ -414,11 +418,13 @@ class WaterMeterImport(models.TransientModel):
                 'title': _('Importación completada'),
                 'message': _(
                     '%(created)s contadores creados, %(updated)s actualizados y '
-                    '%(readings)s añadidos al período %(period)s.'
+                    '%(readings)s lecturas añadidas, %(updated_readings)s lecturas '
+                    'actualizadas al período %(period)s.'
                 ) % {
                     'created': created_count,
                     'updated': updated_count,
                     'readings': reading_count,
+                    'updated_readings': updated_reading_count,
                     'period': self.period_id.name,
                 },
                 'type': 'success',
