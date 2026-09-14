@@ -1,6 +1,6 @@
 {
     'name': 'Water Meter Readings',
-    'version': '19.0.13.0.2',
+    'version': '19.0.14.0.0',
     'summary': 'Registro de lecturas de contadores de agua',
     'category': 'Tools',
     'author': 'Toni',
@@ -23,6 +23,7 @@
         'views/water_period_views.xml',
         'views/meter_import_views.xml',
         'views/mariadb_settings_views.xml',
+        'views/mariadb_connection_views.xml',
         'data/sequence_data.xml',
     ],
     'installable': True,

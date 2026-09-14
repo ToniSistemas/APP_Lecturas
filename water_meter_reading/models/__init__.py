@@ -6,3 +6,4 @@ from . import res_users
 from . import mobile_address
 from . import mobile_street
 from . import mariadb_settings
+from . import mariadb_connection

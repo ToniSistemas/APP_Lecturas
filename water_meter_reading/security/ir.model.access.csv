@@ -1,4 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_water_mariadb_connection_admin,water.mariadb.connection.admin,model_water_mariadb_connection,base.group_system,1,1,1,1
 access_water_meter_import,access_water_meter_import,model_water_meter_import,base.group_user,1,1,1,1
 access_water_reading_mobile_selector,access_water_reading_mobile_selector,model_water_reading_mobile_selector,base.group_user,1,1,1,1
 access_water_reading_mobile_address_option,access_water_reading_mobile_address_option,model_water_reading_mobile_address_option,base.group_user,1,1,1,1
