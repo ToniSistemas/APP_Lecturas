@@ -144,6 +144,8 @@ class WaterMeterImport(models.TransientModel):
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
+            if self.import_readings and not values['name']:
+                values['name'] = '?'
             missing_fields = [
                 label for label, field in (
                     ('Ruta', 'name'),
@@ -159,7 +161,7 @@ class WaterMeterImport(models.TransientModel):
                         ', '.join(missing_fields),
                     )
                 )
-            if values['name'] in routes:
+            if values['name'] != '?' and values['name'] in routes:
                 raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
                     row_number, values['name']))
             if values['meter_number'] in meter_numbers:
@@ -203,7 +205,8 @@ class WaterMeterImport(models.TransientModel):
                     raise ValidationError(_('Fila %s: Consumo debe ser un número entero.') % row_number) from error
             else:
                 imported_consumption = False
-            routes.add(values['name'])
+            if values['name'] != '?':
+                routes.add(values['name'])
             meter_numbers.add(values['meter_number'])
             subscribers.add(values['subscriber'])
             imported_rows.append((values, previous_reading, current_reading, imported_consumption))
@@ -286,7 +289,7 @@ class WaterMeterImport(models.TransientModel):
         updated_count = 0
         for values, previous_reading, current_reading, imported_consumption in imported_rows:
             meter = existing_by_subscriber.get(values['subscriber'])
-            route_owner = existing_by_route.get(values['name'])
+            route_owner = existing_by_route.get(values['name']) if values['name'] != '?' else None
             if route_owner and route_owner != meter:
                 raise ValidationError(
                     _('La ruta %(route)s ya pertenece al contador %(meter)s.') % {
