@@ -194,7 +194,7 @@ class WaterMeterImport(models.TransientModel):
                 previous_reading = False
             current_reading = values.pop('reading_current', False)
             imported_consumption = values.pop('consumption', False)
-            if current_reading:
+            if current_reading not in (False, None, ''):
                 try:
                     current_reading = int(current_reading)
                 except (TypeError, ValueError) as error:
@@ -203,7 +203,7 @@ class WaterMeterImport(models.TransientModel):
                     raise ValidationError(_('Fila %s: Lectura actual no puede ser negativa.') % row_number)
             else:
                 current_reading = False
-            if imported_consumption:
+            if imported_consumption not in (False, None, ''):
                 try:
                     imported_consumption = int(imported_consumption)
                 except (TypeError, ValueError) as error:
