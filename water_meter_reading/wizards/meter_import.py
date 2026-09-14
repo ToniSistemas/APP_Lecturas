@@ -144,12 +144,20 @@ class WaterMeterImport(models.TransientModel):
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
             }
-            if (
-                not values['name'] or not values['meter_number']
-                or not values['owner_name'] or not values['subscriber']
-            ):
+            missing_fields = [
+                label for label, field in (
+                    ('Ruta', 'name'),
+                    ('Contador', 'meter_number'),
+                    ('Nombre', 'owner_name'),
+                    ('Abonado', 'subscriber'),
+                ) if not values[field]
+            ]
+            if missing_fields:
                 raise ValidationError(
-                    _('Fila %s: Ruta, Contador, Nombre y Abonado son obligatorios.') % row_number
+                    _('Fila %s: faltan campos obligatorios: %s.') % (
+                        row_number,
+                        ', '.join(missing_fields),
+                    )
                 )
             if values['name'] in routes:
                 raise ValidationError(_('Fila %s: la ruta %s está repetida en el archivo.') % (
