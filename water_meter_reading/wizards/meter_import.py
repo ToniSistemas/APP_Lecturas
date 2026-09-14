@@ -409,3 +409,33 @@ class WaterMeterImport(models.TransientModel):
                 'sticky': False,
             },
         }
+
+    def action_import_rows(self, rows):
+        self.ensure_one()
+        headers = {
+            'ruta': 'Ruta',
+            'contador': 'Contador',
+            'nombre': 'Nombre',
+            'abonado': 'Abonado',
+            'referencia_catastral': 'Referencia catastral',
+            'calle': 'Calle',
+            'ubicacion': 'Ubicación',
+            'tipo_contador': 'Tipo de contador',
+            'lectura_anterior': 'Lectura anterior',
+            'lectura_actual': 'Lectura actual',
+            'consumo': 'Consumo',
+        }
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=list(headers.values()))
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({
+                headers[key]: row.get(key, '')
+                for key in headers
+            })
+        self.write({
+            'file': base64.b64encode(output.getvalue().encode('utf-8')),
+            'filename': 'lecturas_mariadb.csv',
+            'import_readings': True,
+        })
+        return self.action_import()

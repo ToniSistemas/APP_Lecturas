@@ -18,6 +18,53 @@ class WaterMeterMariaDBConnection(models.Model):
     last_test_message = fields.Text(string='Resultado de la última prueba', readonly=True)
     last_test_date = fields.Datetime(string='Última prueba', readonly=True)
 
+    def fetch_readings(self, year, trimester):
+        self.ensure_one()
+        try:
+            import pymysql
+        except ImportError as error:
+            raise UserError(_("Falta instalar la librería Python 'PyMySQL' en el servidor Odoo.")) from error
+        query = """
+            SELECT
+                Ruta AS ruta,
+                Contador AS contador,
+                Nombre AS nombre,
+                Abonado AS abonado,
+                `Referencia catastral` AS referencia_catastral,
+                OBJ_ENTIDADCOLECTIVA AS calle,
+                CONCAT_WS(', ', NULLIF(`NÚMERO`, ''), NULLIF(PORTAL, ''),
+                          NULLIF(PLANTA, ''), NULLIF(ESCALERA, ''), NULLIF(PUERTA, '')) AS ubicacion,
+                `Tipo de contador` AS tipo_contador,
+                `Lectura anterior` AS lectura_anterior,
+                `Lectura actual` AS lectura_actual,
+                Consumo AS consumo
+            FROM lecturas
+            WHERE Ejercicio = %s AND periodo = %s
+        """
+        connection = None
+        try:
+            connection = pymysql.connect(
+                host=self.host,
+                port=self.port or 3306,
+                user=self.user,
+                password=self.password or '',
+                database=self.database,
+                connect_timeout=5,
+                read_timeout=30,
+                write_timeout=5,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor,
+                read_default_file=None,
+            )
+            with connection.cursor() as cursor:
+                cursor.execute(query, (year, trimester))
+                return cursor.fetchall()
+        except Exception as error:
+            raise UserError(_('No se pudo leer la tabla lecturas: %s') % error) from error
+        finally:
+            if connection:
+                connection.close()
+
     def action_test_connection(self):
         self.ensure_one()
         try:

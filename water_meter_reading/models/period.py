@@ -91,17 +91,23 @@ class WaterPeriod(models.Model):
             raise UserError(_('No se puede importar en un período cerrado.'))
         if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
             raise AccessError(_('Solo los supervisores pueden importar censos ya leídos.'))
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Importar censo ya leído'),
-            'res_model': 'water.meter.import',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_period_id': self.id,
-                'default_import_readings': True,
-            },
-        }
+        connection = self.env['water.mariadb.connection'].search([('active', '=', True)], limit=1)
+        if not connection:
+            raise UserError(_('Configura primero una conexión MariaDB activa.'))
+        rows = connection.fetch_readings(int(self.year), int(self.trimester))
+        if not rows:
+            raise UserError(_('No hay lecturas en MariaDB para %(year)s, período %(period)s.') % {
+                'year': self.year,
+                'period': self.trimester,
+            })
+        return self.env['water.meter.import'].with_context(
+            default_period_id=self.id,
+            default_import_readings=True,
+        ).create({
+            'period_id': self.id,
+            'import_readings': True,
+        }).action_import_rows(rows)
+
 
     def action_start_mobile_readings(self):
         self.ensure_one()
