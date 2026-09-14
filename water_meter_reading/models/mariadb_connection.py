@@ -20,6 +20,8 @@ class WaterMeterMariaDBConnection(models.Model):
     last_test_ok = fields.Boolean(string='Última prueba correcta', readonly=True)
     last_test_message = fields.Text(string='Resultado de la última prueba', readonly=True)
     last_test_date = fields.Datetime(string='Última prueba', readonly=True)
+    sql_query = fields.Text(string='Consulta SQL personalizada')
+    last_sql_query = fields.Text(string='Última consulta ejecutada', readonly=True)
 
     @staticmethod
     def _normalize_column(name):
@@ -109,7 +111,7 @@ class WaterMeterMariaDBConnection(models.Model):
                     )
                     if location_columns else 'NULL'
                 )
-                query = """SELECT
+                generated_query = """SELECT
                     %(ruta)s AS ruta,
                     %(contador)s AS contador,
                     %(nombre)s AS nombre,
@@ -137,6 +139,16 @@ class WaterMeterMariaDBConnection(models.Model):
                         'ejercicio': self._quote_column(required['exercise']),
                         'periodo': self._quote_column(required['period']),
                     }
+                query = self.sql_query.strip() if self.sql_query else generated_query
+                normalized_query = query.lstrip().casefold()
+                if not (normalized_query.startswith('select ') or normalized_query.startswith('with ')):
+                    raise UserError(_('La consulta personalizada debe comenzar por SELECT o WITH.'))
+                if ';' in query.rstrip().rstrip(';'):
+                    raise UserError(_('La consulta personalizada no puede contener varias sentencias.'))
+                forbidden = re.search(r'\b(insert|update|delete|drop|alter|truncate|create|replace|grant|revoke)\b', normalized_query)
+                if forbidden:
+                    raise UserError(_('La consulta contiene una operación no permitida: %s.') % forbidden.group(1))
+                self.sudo().write({'last_sql_query': query})
                 cursor.execute(query, (year, trimester))
                 return cursor.fetchall()
         except Exception as error:
