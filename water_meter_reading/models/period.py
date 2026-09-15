@@ -43,7 +43,14 @@ class WaterPeriod(models.Model):
     @api.depends('trimester', 'year')
     def _compute_name(self):
         for rec in self:
-            rec.name = f"{rec.trimester}T{rec.year}" if rec.trimester and rec.year else ''
+            rec.name = f"{rec.year}-T{rec.trimester}" if rec.trimester and rec.year else ''
+
+    @api.depends('trimester', 'year')
+    def _compute_display_name(self):
+        for rec in self:
+            rec.display_name = (
+                f"{rec.trimester}T{rec.year}" if rec.trimester and rec.year else ''
+            )
 
     @api.depends('reading_ids')
     def _compute_reading_count(self):
