@@ -8,7 +8,11 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     period_id = fields.Many2one('water.period', string='Período', required=True, readonly=True)
     address_id = fields.Many2one('water.reading.mobile.address.option', readonly=True)
-    street_id = fields.Many2one('water.reading.mobile.street', string='Calle')
+    street_id = fields.Many2one(
+        'water.reading.mobile.street',
+        string='Calle',
+        ondelete='set null',
+    )
     pending_street = fields.Char(string='Calle + Ubicación')
     all_street = fields.Char(string='Calle + Ubicación')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
@@ -27,6 +31,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _sync_streets(self, period_id):
         Street = self.env['water.reading.mobile.street'].sudo()
         period = self.env['water.period'].browse(period_id)
+        self.sudo().search([('period_id', '=', period.id)]).write({'street_id': False})
         Street.search([('period_id', '=', period.id)]).unlink()
         meters = period.reading_ids.sudo().mapped('meter_id')
         meter_streets = {
