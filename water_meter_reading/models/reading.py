@@ -191,13 +191,7 @@ class WaterReading(models.Model):
         })
         return {
             'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Lectura estimada'),
-                'message': warning or _('Lectura actual estimada: %s.') % estimated_current,
-                'type': 'warning' if warning else 'success',
-                'sticky': bool(warning),
-            },
+            'tag': 'reload',
         }
 
     def _get_anomaly_values(self):
