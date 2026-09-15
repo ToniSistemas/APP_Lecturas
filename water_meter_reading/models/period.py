@@ -115,6 +115,24 @@ class WaterPeriod(models.Model):
             'import_readings': True,
         }).action_import_rows(rows, import_readings=True)
 
+    def action_open_gtb_update(self):
+        self.ensure_one()
+        if self.state == 'closed':
+            raise UserError(_('No se puede actualizar un período cerrado.'))
+        if not (
+            self.env.user.has_group('base.group_system')
+            or self.env.user.has_group('water_meter_reading.group_water_supervisor')
+        ):
+            raise AccessError(_('Solo administradores y supervisores pueden actualizar datos GTB.'))
+        connection = self.env['water.mariadb.connection'].search([('active', '=', True)], limit=1)
+        if not connection:
+            raise UserError(_('Configura primero una conexión MariaDB activa.'))
+        rows = connection.fetch_readings(int(self.year), int(self.trimester))
+        if not rows:
+            raise UserError(_('No hay datos GTB en MariaDB para este período.'))
+        wizard = self.env['water.meter.gtb.update'].create({'period_id': self.id})
+        return wizard.action_prepare(rows)
+
 
     def action_start_mobile_readings(self):
         self.ensure_one()

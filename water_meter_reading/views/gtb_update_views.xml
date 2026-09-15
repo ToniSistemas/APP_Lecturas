@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_meter_gtb_update_form" model="ir.ui.view">
+    <field name="name">water.meter.gtb.update.form</field>
+    <field name="model">water.meter.gtb.update</field>
+    <field name="arch" type="xml">
+      <form string="Vista previa actualización GTB">
+        <header>
+          <button name="action_confirm" type="object"
+                  string="Confirmar actualización GTB" class="btn-primary"
+                  icon="fa-check"/>
+        </header>
+        <sheet>
+          <div class="alert alert-warning" role="alert">
+            Esta operación modificará lecturas en producción. Revisa la vista previa y marca la confirmación antes de continuar.
+          </div>
+          <group>
+            <field name="period_id"/>
+            <field name="summary" nolabel="1"/>
+            <field name="confirmed"/>
+          </group>
+          <field name="line_ids" nolabel="1">
+            <list string="Vista previa GTB">
+              <field name="status"/>
+              <field name="status_message"/>
+              <field name="subscriber"/>
+              <field name="meter_number"/>
+              <field name="old_route"/>
+              <field name="new_route"/>
+              <field name="old_current"/>
+              <field name="new_current"/>
+              <field name="old_consumption"/>
+              <field name="gtb_consumption"/>
+            </list>
+          </field>
+          <footer>
+            <button name="action_confirm" type="object"
+                    string="Confirmar actualización GTB" class="btn-primary"/>
+            <button string="Cancelar" special="cancel" class="btn-secondary"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

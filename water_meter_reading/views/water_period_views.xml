@@ -62,6 +62,11 @@
               string="Importar censo ya leído" class="btn-secondary"
               icon="fa-upload" groups="water_meter_reading.group_water_supervisor"
               invisible="state == 'closed'"/>
+          <button name="action_open_gtb_update" type="object"
+                  string="Subir datos GTB" class="btn-secondary"
+                  icon="fa-database"
+                  groups="base.group_system,water_meter_reading.group_water_supervisor"
+                  invisible="state == 'closed'"/>
           <button name="action_export_excel" type="object"
                   string="Exportar Excel" class="btn btn-secondary"
                   icon="fa-download"/>
