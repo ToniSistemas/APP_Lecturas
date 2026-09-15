@@ -256,11 +256,22 @@ class WaterPeriod(models.Model):
 
     def action_close(self):
         self.ensure_one()
+        if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
+            raise AccessError(_('Solo los supervisores pueden cerrar períodos.'))
         self.state = 'closed'
 
     def action_reopen(self):
         self.ensure_one()
+        if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
+            raise AccessError(_('Solo los supervisores pueden reabrir períodos.'))
         self.state = 'open'
+
+    def write(self, vals):
+        if 'state' in vals and not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
+            draft_to_open = vals['state'] == 'open' and all(record.state == 'draft' for record in self)
+            if not draft_to_open:
+                raise AccessError(_('Solo los supervisores pueden cerrar o reabrir períodos.'))
+        return super().write(vals)
 
     def unlink(self):
         if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):

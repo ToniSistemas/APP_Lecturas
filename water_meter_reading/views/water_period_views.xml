@@ -72,9 +72,11 @@
               invisible="not reading_ids"/>
           <button name="action_close" type="object"
                   string="Cerrar período"
-                  invisible="state != 'open'"/>
+              groups="water_meter_reading.group_water_supervisor"
+              invisible="state != 'open'"/>
           <button name="action_reopen" type="object"
                   string="Reabrir período"
+              groups="water_meter_reading.group_water_supervisor"
                   invisible="state != 'closed'"/>
           <field name="state" widget="statusbar"
                  statusbar_visible="draft,open,closed"/>
