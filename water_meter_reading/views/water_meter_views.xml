@@ -135,6 +135,8 @@
         <field name="meter_zip" string="Código postal"/>
         <filter string="Sin lectura actual" name="missing_current_reading"
           domain="[('reading_current','=',0)]"/>
+        <filter string="Lecturas estimadas" name="estimated_readings"
+          domain="[('estimated_reading','=',True)]"/>
         <filter string="Cerrado" name="meter_closed" domain="[('meter_closed','=',True)]"/>
         <filter string="Sin contador" name="meter_missing" domain="[('meter_missing','=',True)]"/>
         <filter string="Roto" name="meter_broken" domain="[('meter_broken','=',True)]"/>
@@ -181,6 +183,7 @@
         <field name="reading_previous"/>
         <field name="reading_current"/>
         <field name="difference"/>
+        <field name="estimated_reading" string="Estimada"/>
         <field name="anomaly_severity"/>
         <field name="anomaly_unchanged" column_invisible="1"/>
         <field name="anomaly_reason" optional="show"/>

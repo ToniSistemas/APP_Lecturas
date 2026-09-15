@@ -85,6 +85,10 @@
                    class="o_water_mobile_photo" options="{'size': [240, 240]}"/>
           </div>
 
+              <button name="action_estimate_current" type="object"
+              string="Estimar lectura actual" icon="fa-calculator"
+              class="btn-secondary" invisible="reading_current != 0"/>
+
           <group string="Últimas lecturas">
             <field name="history_reading_ids" readonly="1" nolabel="1">
               <list string="Últimas lecturas">
@@ -92,6 +96,7 @@
                 <field name="reading_previous" string="Lectura anterior"/>
                 <field name="reading_current" string="Lectura actual"/>
                 <field name="difference" string="Consumo"/>
+                <field name="estimated_reading" string="Estimada"/>
               </list>
             </field>
           </group>

@@ -41,6 +41,10 @@ class WaterReading(models.Model):
     reading_previous = fields.Integer(string='Lectura anterior')
     reading_current = fields.Integer(string='Lectura actual')
     difference = fields.Integer(string='Diferencia', compute='_compute_difference', store=True)
+    estimated_reading = fields.Boolean(string='Lectura estimada', default=False, index=True)
+    estimated_note = fields.Text(string='Detalle de estimación', readonly=True)
+    estimated_by = fields.Many2one('res.users', string='Estimada por', readonly=True)
+    estimated_at = fields.Datetime(string='Fecha de estimación', readonly=True)
     observations = fields.Text(string='Observaciones')
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
     period_id = fields.Many2one('water.period', string='Período', ondelete='set null', index=True)
@@ -128,6 +132,73 @@ class WaterReading(models.Model):
                 # Rollover: (max+1 - anterior) + actual
                 diff = (rec.meter_max_value + 1 - rec.reading_previous) + rec.reading_current
             rec.difference = diff
+
+    def action_estimate_current(self):
+        self.ensure_one()
+        if self.period_id and self.period_id.state == 'closed':
+            raise ValidationError(_('No se puede estimar una lectura en un período cerrado.'))
+        if self.reading_current:
+            raise ValidationError(_('La lectura actual ya tiene un valor.'))
+        previous_readings = self.search([
+            ('meter_id', '=', self.meter_id.id),
+            ('id', '!=', self.id),
+            ('reading_current', '>', 0),
+        ])
+        if self.period_id:
+            previous_readings = previous_readings.filtered(
+                lambda reading: reading.period_id and (
+                    reading.period_id.year < self.period_id.year
+                    or (
+                        reading.period_id.year == self.period_id.year
+                        and int(reading.period_id.trimester) < int(self.period_id.trimester)
+                    )
+                )
+            )
+        previous_readings = previous_readings.sorted(
+            key=lambda reading: (
+                reading.period_id.year if reading.period_id else 0,
+                int(reading.period_id.trimester) if reading.period_id else 0,
+                reading.id,
+            ),
+            reverse=True,
+        )[:4]
+        if not previous_readings:
+            raise ValidationError(_('No se puede estimar: no existen lecturas anteriores.'))
+        consumptions = [reading.difference for reading in previous_readings if reading.difference >= 0]
+        if not consumptions:
+            raise ValidationError(_('No se puede estimar: no existen consumos válidos anteriores.'))
+        average_consumption = round(sum(consumptions) / len(consumptions))
+        base_reading = self.reading_previous or previous_readings[0].reading_current
+        estimated_current = base_reading + average_consumption
+        estimated_periods = [reading.period_id.display_name for reading in previous_readings if reading.estimated_reading]
+        note = _(
+            'Estimación basada en %(count)s período(s) anteriores. '
+            'Consumo medio: %(average)s.'
+        ) % {'count': len(consumptions), 'average': average_consumption}
+        warning = False
+        if estimated_periods:
+            warning = _(
+                'Aviso: ya fue estimada en el período anterior (%s). '
+                'Revisa el resultado con especial atención.'
+            ) % ', '.join(estimated_periods)
+            note += ' ' + warning
+        self.with_context(skip_estimation_reset=True).write({
+            'reading_current': estimated_current,
+            'estimated_reading': True,
+            'estimated_note': note,
+            'estimated_by': self.env.user.id,
+            'estimated_at': fields.Datetime.now(),
+        })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Lectura estimada'),
+                'message': warning or _('Lectura actual estimada: %s.') % estimated_current,
+                'type': 'warning' if warning else 'success',
+                'sticky': bool(warning),
+            },
+        }
 
     def _get_anomaly_values(self):
         self.ensure_one()
@@ -439,6 +510,8 @@ class WaterReading(models.Model):
         return records
 
     def write(self, vals):
+        if 'reading_current' in vals and not self.env.context.get('skip_estimation_reset'):
+            vals = dict(vals, estimated_reading=False, estimated_note=False, estimated_by=False, estimated_at=False)
         if 'review_status' in vals:
             if vals['review_status'] == 'pending':
                 vals.update({'reviewed_by': False, 'reviewed_at': False})
