@@ -29,22 +29,22 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     @api.model
     def _sync_streets(self, period_id):
-        Street = self.env['water.reading.mobile.street'].sudo()
+        Street = self.env['water.reading.mobile.street'].sudo().with_context(active_test=False)
         period = self.env['water.period'].browse(period_id)
-        old_streets = Street.search([('period_id', '=', period.id)])
-        if old_streets:
-            self.sudo().search([('street_id', 'in', old_streets.ids)]).write({'street_id': False})
-            old_streets.unlink()
         meters = period.reading_ids.sudo().mapped('meter_id')
         meter_streets = {
             (meter.street or meter.address).strip()
             for meter in meters
             if (meter.street or meter.address) and (meter.street or meter.address).strip()
         }
-        Street.create([
-            {'name': street, 'period_id': period.id}
-            for street in meter_streets
-        ])
+        current_streets = Street.search([('period_id', '=', period.id)])
+        current_streets.write({'active': False})
+        for street in meter_streets:
+            record = current_streets.filtered(lambda item: item.name == street)[:1]
+            if record:
+                record.write({'active': True})
+            else:
+                Street.create({'name': street, 'period_id': period.id, 'active': True})
 
     @api.model_create_multi
     def create(self, vals_list):

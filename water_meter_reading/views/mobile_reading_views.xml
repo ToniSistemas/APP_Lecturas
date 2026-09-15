@@ -17,7 +17,7 @@
             <field name="period_id"/>
             <field name="only_pending"/>
             <field name="street_id" string="Calle"
-                   domain="[('period_id', '=', period_id)]"
+                   domain="[('period_id', '=', period_id), ('active', '=', True)]"
                    options="{'no_create': true, 'no_open': true}"
                        placeholder="Buscar calle"/>
             <field name="meter_id"

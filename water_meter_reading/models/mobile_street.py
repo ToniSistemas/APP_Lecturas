@@ -8,6 +8,7 @@ class WaterReadingMobileStreet(models.Model):
 
     name = fields.Char(required=True)
     period_id = fields.Many2one('water.period', index=True, ondelete='cascade')
+    active = fields.Boolean(default=True)
 
     _unique_period_name = models.UniqueIndex(
         '(period_id, name)',
