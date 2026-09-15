@@ -91,6 +91,7 @@
                   <field name="allow_edit_previous" column_invisible="1"/>
                   <field name="reading_previous" readonly="not allow_edit_previous"/>
                   <field name="reading_current"/>
+                  <field name="estimated_reading" string="Estimada"/>
                   <field name="difference" readonly="1"/>
                   <field name="new_meter" optional="show"/>
                   <field name="previous_meter_number" optional="hide"/>
