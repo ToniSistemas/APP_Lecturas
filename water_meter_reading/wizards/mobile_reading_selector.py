@@ -31,8 +31,10 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _sync_streets(self, period_id):
         Street = self.env['water.reading.mobile.street'].sudo()
         period = self.env['water.period'].browse(period_id)
-        self.sudo().search([('period_id', '=', period.id)]).write({'street_id': False})
-        Street.search([('period_id', '=', period.id)]).unlink()
+        old_streets = Street.search([('period_id', '=', period.id)])
+        if old_streets:
+            self.sudo().search([('street_id', 'in', old_streets.ids)]).write({'street_id': False})
+            old_streets.unlink()
         meters = period.reading_ids.sudo().mapped('meter_id')
         meter_streets = {
             (meter.street or meter.address).strip()
