@@ -17,7 +17,7 @@ class WaterMeterGtbUpdate(models.TransientModel):
 
     def action_prepare(self, rows):
         self.ensure_one()
-        self._check_access()
+        self._check_gtb_access()
         if self.period_id.state == 'closed':
             raise UserError(_('No se puede actualizar un período cerrado.'))
         readings = {
@@ -84,7 +84,7 @@ class WaterMeterGtbUpdate(models.TransientModel):
             'target': 'new',
         }
 
-    def _check_access(self):
+    def _check_gtb_access(self):
         if not (
             self.env.user.has_group('base.group_system')
             or self.env.user.has_group('water_meter_reading.group_water_supervisor')
@@ -93,7 +93,7 @@ class WaterMeterGtbUpdate(models.TransientModel):
 
     def action_confirm(self):
         self.ensure_one()
-        self._check_access()
+        self._check_gtb_access()
         if self.period_id.state == 'closed':
             raise UserError(_('No se puede actualizar un período cerrado.'))
         if not self.confirmed:
