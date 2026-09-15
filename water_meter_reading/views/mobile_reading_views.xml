@@ -82,12 +82,12 @@
               <field name="difference" readonly="1"/>
             </div>
             <field name="counter_photo" widget="camera_image" nolabel="1"
-                   class="o_water_mobile_photo" options="{'size': [240, 240]}"/>
+                 class="o_water_mobile_photo" options="{'size': [240, 240]}"/>
           </div>
-
               <button name="action_estimate_current" type="object"
-              string="Estimar lectura actual" icon="fa-calculator"
-              class="btn-secondary" invisible="reading_current != 0"/>
+                string="Estimar lectura actual" icon="fa-calculator"
+                class="btn-secondary" invisible="reading_current != 0"/>
+              <field name="estimated_reading" readonly="1" invisible="not estimated_reading"/>
 
           <group string="Últimas lecturas">
             <field name="history_reading_ids" readonly="1" nolabel="1">
