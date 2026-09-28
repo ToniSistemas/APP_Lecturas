@@ -7,6 +7,7 @@ class WaterReadingMobileRoute(models.Model):
     _rec_name = 'name'
 
     name = fields.Char(required=True)
+    route_order = fields.Integer(string='Orden', index=True)
     period_id = fields.Many2one('water.period', index=True, ondelete='cascade')
     active = fields.Boolean(default=True)
     meter_number = fields.Char(string='Contador', readonly=True)

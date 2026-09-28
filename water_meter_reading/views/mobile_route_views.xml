@@ -4,7 +4,7 @@
     <field name="name">water.reading.mobile.route.list</field>
     <field name="model">water.reading.mobile.route</field>
     <field name="arch" type="xml">
-      <list string="Rutas">
+      <list string="Rutas" default_order="route_order asc, name asc">
         <field name="name" string="Ruta"/>
         <field name="meter_number" string="Contador"/>
         <field name="owner_name" string="Nombre"/>

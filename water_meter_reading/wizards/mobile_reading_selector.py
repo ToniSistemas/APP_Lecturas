@@ -51,6 +51,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             meter = meters.filtered(lambda item: item.name.strip() == route)[:1]
             values = {
                 'active': True,
+                'route_order': int(route) if route.isdigit() else 0,
                 'meter_number': meter.meter_number if meter else False,
                 'owner_name': meter.owner_name if meter else False,
                 'subscriber': meter.subscriber if meter else False,
