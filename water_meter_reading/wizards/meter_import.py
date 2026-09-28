@@ -28,7 +28,7 @@ class WaterMeterImport(models.TransientModel):
         'Calle': 'street',
         'Ubicación': 'street_number',
         'C.P.': 'zip',
-        'Municipio': 'municipality',
+        'Pueblo': 'municipality',
         'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
         'Lectura actual': 'reading_current',
@@ -121,10 +121,15 @@ class WaterMeterImport(models.TransientModel):
         if not rows:
             raise UserError(_('El archivo no contiene contadores para importar.'))
 
-        normalized_rows = [
-            {self._normalize_header(header): value for header, value in row.items()}
-            for row in rows
-        ]
+        normalized_rows = []
+        for row in rows:
+            normalized_row = {
+                self._normalize_header(header): value
+                for header, value in row.items()
+            }
+            if 'municipio' in normalized_row and 'pueblo' not in normalized_row:
+                normalized_row['pueblo'] = normalized_row['municipio']
+            normalized_rows.append(normalized_row)
         missing_route_values = self.env.context.get('missing_routes', {})
         missing_route_lines = []
         for row_number, row in enumerate(normalized_rows, start=2):
