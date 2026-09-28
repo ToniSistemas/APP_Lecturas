@@ -44,10 +44,20 @@ class WaterReadingMobileSelector(models.TransientModel):
         current_routes.write({'active': False})
         for route in meter_routes:
             record = current_routes.filtered(lambda item: item.name == route)[:1]
+            meter = meters.filtered(lambda item: item.name.strip() == route)[:1]
+            values = {
+                'active': True,
+                'meter_number': meter.meter_number if meter else False,
+                'owner_name': meter.owner_name if meter else False,
+                'subscriber': meter.subscriber if meter else False,
+                'street': meter.street if meter else False,
+                'pueblo': meter.pueblo if meter else False,
+                'location': meter.street_number if meter else False,
+            }
             if record:
-                record.write({'active': True})
+                record.write(values)
             else:
-                Route.create({'name': route, 'period_id': period.id, 'active': True})
+                Route.create(dict(values, name=route, period_id=period.id))
         meter_pueblos = {
             meter.pueblo.strip()
             for meter in meters
@@ -126,10 +136,6 @@ class WaterReadingMobileSelector(models.TransientModel):
     @api.onchange('street_id', 'pueblo_id', 'route_id', 'pending_street', 'all_street')
     def _onchange_street(self):
         self._compute_counts()
-        if self.route_id and not self._filtered_readings().filtered(
-            lambda reading: reading.meter_route == self.route_id.name
-        ):
-            self.route_id = False
 
     def action_open_reading(self):
         self.ensure_one()

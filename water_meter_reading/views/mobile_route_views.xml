@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_reading_mobile_route_list" model="ir.ui.view">
+    <field name="name">water.reading.mobile.route.list</field>
+    <field name="model">water.reading.mobile.route</field>
+    <field name="arch" type="xml">
+      <list string="Rutas">
+        <field name="name" string="Ruta"/>
+        <field name="meter_number" string="Contador"/>
+        <field name="owner_name" string="Nombre"/>
+        <field name="subscriber" string="Abonado"/>
+        <field name="street" string="Calle"/>
+        <field name="location" string="Ubicación"/>
+        <field name="pueblo" string="Pueblo"/>
+      </list>
+    </field>
+  </record>
+</odoo>
