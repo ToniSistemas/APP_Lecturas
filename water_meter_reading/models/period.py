@@ -246,7 +246,7 @@ class WaterPeriod(models.Model):
             ws.write(row, 1, r.meter_route or '')
             ws.write(row, 2, r.meter_owner_name or '')
             ws.write(row, 3, r.meter_id.subscriber or '')
-            ws.write(row, 4, r.meter_municipality or '')
+            ws.write(row, 4, r.meter_pueblo or '')
             ws.write(row, 5, r.meter_zip or '')
             ws.write(row, 6, r.meter_id.cadastral_ref or '')
             if r.date:

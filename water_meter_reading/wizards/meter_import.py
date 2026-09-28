@@ -28,7 +28,7 @@ class WaterMeterImport(models.TransientModel):
         'Calle': 'street',
         'Ubicación': 'street_number',
         'C.P.': 'zip',
-        'Pueblo': 'municipality',
+        'Pueblo': 'pueblo',
         'Tipo de contador': 'meter_type',
         'Lectura anterior': 'reading_previous',
         'Lectura actual': 'reading_current',
@@ -181,7 +181,7 @@ class WaterMeterImport(models.TransientModel):
                 if field in available_fields
             }
             if 'pueblo' in row:
-                values['municipality'] = row['pueblo']
+                values['pueblo'] = row['pueblo']
             values = {
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
@@ -530,7 +530,7 @@ class WaterMeterImport(models.TransientModel):
             }
             pueblo_value = normalized_row.get('objentidadsingular')
             if pueblo_value is None:
-                pueblo_value = normalized_row.get('municipality')
+                pueblo_value = normalized_row.get('pueblo')
             if pueblo_value is None:
                 pueblo_value = normalized_row.get('municipio')
             writer.writerow({

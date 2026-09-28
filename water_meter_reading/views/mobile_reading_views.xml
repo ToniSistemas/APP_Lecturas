@@ -68,7 +68,7 @@
               <field name="meter_route" readonly="1"/>
               <field name="meter_street" string="Calle" readonly="1"/>
               <field name="meter_street_number" string="Ubicación" readonly="1"/>
-              <field name="meter_municipality" readonly="1"/>
+              <field name="meter_pueblo" readonly="1"/>
             </group>
           </group>
 

@@ -20,7 +20,7 @@ class WaterReading(models.Model):
     meter_street = fields.Char(related='meter_id.street', string='Calle', readonly=True)
     meter_street_number = fields.Char(related='meter_id.street_number', string='Ubicación', readonly=True)
     meter_zip = fields.Char(related='meter_id.zip', string='C.P.', store=True, readonly=True)
-    meter_municipality = fields.Char(related='meter_id.municipality', string='Pueblo', store=True, readonly=True)
+    meter_pueblo = fields.Char(related='meter_id.pueblo', string='Pueblo', store=True, readonly=True)
     new_meter = fields.Boolean(string='Contador nuevo', default=False)
     previous_meter_number = fields.Char(string='Contador anterior', readonly=True)
     new_meter_number = fields.Char(string='Nuevo contador')

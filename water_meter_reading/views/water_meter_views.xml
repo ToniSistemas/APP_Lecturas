@@ -35,7 +35,7 @@
         <field name="street" string="Calle" optional="show"/>
         <field name="street_number" string="Ubicación" optional="show"/>
         <field name="zip" optional="show"/>
-        <field name="municipality" string="Pueblo" optional="show"/>
+        <field name="pueblo" string="Pueblo" optional="show"/>
       </list>
     </field>
   </record>
@@ -49,7 +49,7 @@
         <field name="name" string="Ruta"/>
         <field name="meter_number" string="Contador"/>
         <field name="owner_name" string="Nombre"/>
-        <field name="municipality" string="Pueblo"/>
+        <field name="pueblo" string="Pueblo"/>
         <separator/>
         <filter string="Activos" name="active" domain="[('active','=',True)]"/>
         <filter string="Archivados" name="archived" domain="[('active','=',False)]"/>
@@ -78,7 +78,7 @@
               <field name="street" string="Calle"/>
               <field name="street_number" string="Ubicación"/>
               <field name="zip"/>
-              <field name="municipality" string="Pueblo"/>
+              <field name="pueblo" string="Pueblo"/>
             </group>
           </group>
           <notebook>
@@ -132,7 +132,7 @@
         <field name="meter_number" string="Contador"/>
         <field name="meter_route" string="Ruta"/>
         <field name="meter_owner_name" string="Nombre"/>
-        <field name="meter_municipality" string="Pueblo"/>
+        <field name="meter_pueblo" string="Pueblo"/>
         <field name="meter_zip" string="Código postal"/>
         <filter string="Sin lectura actual" name="missing_current_reading"
           domain="[('reading_current','=',0)]"/>
@@ -157,8 +157,8 @@
         <group>
           <filter string="Período" name="group_period"
                   context="{'group_by': 'period_id'}"/>
-          <filter string="Pueblo" name="group_municipality"
-                  context="{'group_by': 'meter_municipality'}"/>
+            <filter string="Pueblo" name="group_pueblo"
+              context="{'group_by': 'meter_pueblo'}"/>
           <filter string="Ruta" name="group_route"
                   context="{'group_by': 'meter_route'}"/>
         </group>
