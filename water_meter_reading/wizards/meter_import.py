@@ -269,7 +269,11 @@ class WaterMeterImport(models.TransientModel):
             imported_rows.append((values, previous_reading, current_reading, imported_consumption))
 
         Meter = self.env['water.meter'].with_context(active_test=False)
-        existing_meters = Meter.search([('subscriber', 'in', list(subscribers))])
+        existing_meters = Meter.search([
+            '|',
+            ('subscriber', 'in', list(subscribers)),
+            ('meter_number', 'in', list(meter_numbers)),
+        ])
         duplicate_subscribers = {
             subscriber
             for subscriber in subscribers
@@ -289,8 +293,21 @@ class WaterMeterImport(models.TransientModel):
             meter.meter_number: meter
             for meter in Meter.search([('meter_number', 'in', list(meter_numbers))])
         }
-        for values, _previous_reading, _current_reading, _consumption in imported_rows:
+
+        def find_existing_meter(values):
             subscriber_meter = existing_by_subscriber.get(values['subscriber'])
+            number_meter = existing_by_number.get(values['meter_number'])
+            if subscriber_meter and number_meter and subscriber_meter != number_meter:
+                raise ValidationError(
+                    _('El abonado %(subscriber)s y el contador %(meter)s pertenecen a registros distintos.') % {
+                        'subscriber': values['subscriber'],
+                        'meter': values['meter_number'],
+                    }
+                )
+            return subscriber_meter or number_meter
+
+        for values, _previous_reading, _current_reading, _consumption in imported_rows:
+            subscriber_meter = find_existing_meter(values)
             route_owner = existing_by_route.get(values['name']) if values['name'] != '?' else None
             if route_owner and route_owner != subscriber_meter:
                 if not self.import_readings:
@@ -332,7 +349,7 @@ class WaterMeterImport(models.TransientModel):
             }
         mismatches = []
         for values, imported_previous, _current_reading, _consumption in imported_rows:
-            meter = existing_by_subscriber.get(values['subscriber'])
+            meter = find_existing_meter(values)
             if not meter or imported_previous is False or meter.id not in previous_by_meter:
                 continue
             stored_current = previous_by_meter[meter.id]
@@ -365,7 +382,7 @@ class WaterMeterImport(models.TransientModel):
         created_count = 0
         updated_count = 0
         for values, previous_reading, current_reading, imported_consumption in imported_rows:
-            meter = existing_by_subscriber.get(values['subscriber'])
+            meter = find_existing_meter(values)
             route_owner = existing_by_route.get(values['name']) if values['name'] != '?' else None
             if route_owner and route_owner != meter:
                 raise ValidationError(
