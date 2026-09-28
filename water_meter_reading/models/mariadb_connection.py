@@ -144,7 +144,7 @@ class WaterMeterMariaDBConnection(models.Model):
                     %(referencia)s AS referencia_catastral,
                     %(calle)s AS calle,
                     %(ubicacion)s AS ubicacion,
-                    %(pueblo)s AS municipio,
+                    %(pueblo)s AS pueblo,
                     %(tipo)s AS tipo_contador,
                     %(anterior)s AS lectura_anterior,
                     %(actual)s AS lectura_actual,
