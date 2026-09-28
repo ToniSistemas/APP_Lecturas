@@ -7,5 +7,6 @@ from . import mobile_address
 from . import mobile_street
 from . import mobile_pueblo
 from . import mobile_route
+from . import new_meter
 from . import mariadb_settings
 from . import mariadb_connection

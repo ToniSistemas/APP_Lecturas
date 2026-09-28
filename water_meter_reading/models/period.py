@@ -159,6 +159,20 @@ class WaterPeriod(models.Model):
             },
         }
 
+    def action_open_new_meters(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Contadores nuevos'),
+            'res_model': 'water.new.meter',
+            'view_mode': 'list,form',
+            'domain': [('period_id', '=', self.id)],
+            'context': {
+                'default_period_id': self.id,
+                'search_default_pending': 1,
+            },
+        }
+
     def action_review_anomalies(self):
         self.ensure_one()
         self.reading_ids._refresh_anomalies()

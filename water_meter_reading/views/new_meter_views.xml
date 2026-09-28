@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_water_new_meter_list" model="ir.ui.view">
+    <field name="name">water.new.meter.list</field>
+    <field name="model">water.new.meter</field>
+    <field name="arch" type="xml">
+      <list string="Contadores nuevos">
+        <field name="meter_number"/>
+        <field name="route"/>
+        <field name="pueblo"/>
+        <field name="street"/>
+        <field name="street_number"/>
+        <field name="owner_name"/>
+        <field name="subscriber"/>
+        <field name="state"/>
+        <field name="user_id"/>
+        <field name="date"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_water_new_meter_form" model="ir.ui.view">
+    <field name="name">water.new.meter.form</field>
+    <field name="model">water.new.meter</field>
+    <field name="arch" type="xml">
+      <form string="Contador nuevo">
+        <header>
+          <field name="state" widget="statusbar" statusbar_visible="pending,registered,rejected"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="period_id"/>
+              <field name="meter_number"/>
+              <field name="route"/>
+              <field name="pueblo"/>
+              <field name="street"/>
+              <field name="street_number"/>
+            </group>
+            <group>
+              <field name="owner_name"/>
+              <field name="subscriber"/>
+              <field name="cadastral_ref"/>
+              <field name="meter_type"/>
+              <field name="address"/>
+            </group>
+          </group>
+          <group string="Observaciones">
+            <field name="observations" nolabel="1"/>
+          </group>
+          <group string="Registro">
+            <field name="user_id" readonly="1"/>
+            <field name="date" readonly="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_water_new_meter_search" model="ir.ui.view">
+    <field name="name">water.new.meter.search</field>
+    <field name="model">water.new.meter</field>
+    <field name="arch" type="xml">
+      <search string="Buscar contadores nuevos">
+        <field name="meter_number"/>
+        <field name="route"/>
+        <field name="pueblo"/>
+        <field name="street"/>
+        <field name="subscriber"/>
+        <filter name="pending" string="Pendientes de alta" domain="[('state','=','pending')]"/>
+        <filter name="registered" string="Dados de alta" domain="[('state','=','registered')]"/>
+        <filter name="rejected" string="Descartados" domain="[('state','=','rejected')]"/>
+      </search>
+    </field>
+  </record>
+</odoo>

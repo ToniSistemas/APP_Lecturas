@@ -13,6 +13,7 @@ access_water_reading_mobile_street,access_water_reading_mobile_street,model_wate
 access_water_reading_mobile_pueblo,access_water_reading_mobile_pueblo,model_water_reading_mobile_pueblo,base.group_user,1,1,1,1
 access_water_reading_mobile_route,access_water_reading_mobile_route,model_water_reading_mobile_route,base.group_user,1,1,1,1
 access_water_meter,access_water_meter,model_water_meter,base.group_user,1,1,1,1
+access_water_new_meter,access_water_new_meter,model_water_new_meter,base.group_user,1,1,1,1
 access_water_reading,access_water_reading,model_water_reading,base.group_user,1,1,1,1
 access_water_reading_photo,access_water_reading_photo,model_water_reading_photo,base.group_user,1,1,1,1
 access_water_period,access_water_period,model_water_period,base.group_user,1,1,1,1
