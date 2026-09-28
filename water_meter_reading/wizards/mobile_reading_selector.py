@@ -139,11 +139,26 @@ class WaterReadingMobileSelector(models.TransientModel):
 
     def action_open_reading(self):
         self.ensure_one()
-        reading = self._filtered_readings().filtered(
-            lambda item: item.meter_route == self.route_id.name
-        )[:1]
+        selected_route = (self.route_id.name or '').strip().casefold()
+        readings = self.period_id.reading_ids.sudo().filtered(
+            lambda item: (item.meter_id.name or '').strip().casefold() == selected_route
+        )
+        if self.street_id:
+            selected_street = self.street_id.name.strip().casefold()
+            readings = readings.filtered(
+                lambda item: (item.meter_id.street or item.meter_id.address or '').strip().casefold()
+                == selected_street
+            )
+        if self.pueblo_id:
+            selected_pueblo = self.pueblo_id.name.strip().casefold()
+            readings = readings.filtered(
+                lambda item: (item.meter_id.pueblo or '').strip().casefold() == selected_pueblo
+            )
+        if self.only_pending:
+            readings = readings.filtered(lambda item: item.reading_current == 0)
+        reading = readings[:1]
         if not reading:
-            raise UserError(_('El contador seleccionado no pertenece a este período.'))
+            raise UserError(_('La ruta seleccionada no tiene una lectura pendiente en este período.'))
         return reading._mobile_action(
             mobile_street=self.street_id.name if self.street_id else '',
             mobile_pueblo=self.pueblo_id.name if self.pueblo_id else '',
