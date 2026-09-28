@@ -5,6 +5,7 @@ class WaterReadingMobileRoute(models.Model):
     _name = 'water.reading.mobile.route'
     _description = 'Ruta del selector móvil'
     _rec_name = 'name'
+    _order = 'route_order asc, name asc'
 
     name = fields.Char(required=True)
     route_order = fields.Integer(string='Orden', index=True)
