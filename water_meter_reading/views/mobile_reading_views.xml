@@ -17,11 +17,13 @@
             <field name="period_id"/>
             <field name="only_pending"/>
             <field name="street_id" string="Calle"
-                   domain="[('period_id', '=', period_id), ('active', '=', True)]"
+                   domain="[('id', 'in', available_street_ids)]"
+                   context="{'only_pending': only_pending}"
                    options="{'no_create': true, 'no_open': true}"
                        placeholder="Buscar calle"/>
                 <field name="pueblo_id" string="Pueblo"
-                     domain="[('period_id', '=', period_id), ('active', '=', True)]"
+                       domain="[('id', 'in', available_pueblo_ids)]"
+                       context="{'only_pending': only_pending}"
                      options="{'no_create': true, 'no_open': true}"
                      placeholder="Buscar pueblo"/>
             <field name="route_id" string="Ruta"
@@ -29,6 +31,8 @@
                    options="{'no_create': true, 'no_open': true}"
                    placeholder="Buscar ruta"/>
                  <field name="available_route_ids" invisible="1"/>
+                <field name="available_street_ids" invisible="1"/>
+                <field name="available_pueblo_ids" invisible="1"/>
             <field name="total_count" string="Total contadores" readonly="1"/>
             <field name="read_count" string="Contadores leídos" readonly="1"/>
             <field name="available_count" string="Pendientes" readonly="1"/>

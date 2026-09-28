@@ -26,6 +26,14 @@ class WaterReadingMobileSelector(models.TransientModel):
         'water.reading.mobile.route',
         compute='_compute_counts',
     )
+    available_street_ids = fields.Many2many(
+        'water.reading.mobile.street',
+        compute='_compute_counts',
+    )
+    available_pueblo_ids = fields.Many2many(
+        'water.reading.mobile.pueblo',
+        compute='_compute_counts',
+    )
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
     read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
@@ -128,7 +136,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
         return readings
 
-    @api.depends('period_id', 'street_id', 'pueblo_id', 'pending_street', 'all_street', 'only_pending')
+    @api.depends('period_id', 'street_id', 'pueblo_id', 'route_id', 'pending_street', 'all_street', 'only_pending')
     def _compute_counts(self):
         for wizard in self:
             all_readings = wizard.period_id.reading_ids.sudo()
@@ -143,31 +151,38 @@ class WaterReadingMobileSelector(models.TransientModel):
                 ('active', '=', True),
                 ('name', 'in', list(route_names)),
             ])
+            street_names = {
+                (reading.meter_id.street or reading.meter_id.address).strip()
+                for reading in readings
+                if (reading.meter_id.street or reading.meter_id.address)
+            }
+            pueblo_names = {
+                reading.meter_id.pueblo.strip()
+                for reading in readings
+                if reading.meter_id.pueblo and reading.meter_id.pueblo.strip()
+            }
+            wizard.available_street_ids = self.env['water.reading.mobile.street'].search([
+                ('period_id', '=', wizard.period_id.id),
+                ('active', '=', True),
+                ('name', 'in', list(street_names)),
+            ])
+            wizard.available_pueblo_ids = self.env['water.reading.mobile.pueblo'].search([
+                ('period_id', '=', wizard.period_id.id),
+                ('active', '=', True),
+                ('name', 'in', list(pueblo_names)),
+            ])
 
     @api.onchange('street_id', 'pueblo_id', 'route_id', 'pending_street', 'all_street')
     def _onchange_street(self):
         self._compute_counts()
 
+    @api.onchange('only_pending')
+    def _onchange_pending_options(self):
+        self._compute_counts()
+
     def action_open_reading(self):
         self.ensure_one()
-        selected_route = (self.route_id.name or '').strip().casefold()
-        readings = self.period_id.reading_ids.sudo().filtered(
-            lambda item: (item.meter_id.name or '').strip().casefold() == selected_route
-        )
-        if self.street_id:
-            selected_street = self.street_id.name.strip().casefold()
-            readings = readings.filtered(
-                lambda item: (item.meter_id.street or item.meter_id.address or '').strip().casefold()
-                == selected_street
-            )
-        if self.pueblo_id:
-            selected_pueblo = self.pueblo_id.name.strip().casefold()
-            readings = readings.filtered(
-                lambda item: (item.meter_id.pueblo or '').strip().casefold() == selected_pueblo
-            )
-        if self.only_pending:
-            readings = readings.filtered(lambda item: item.reading_current == 0)
-        reading = readings[:1]
+        reading = self._filtered_readings()[:1]
         if not reading:
             raise UserError(_('La ruta seleccionada no tiene una lectura pendiente en este período.'))
         return reading._mobile_action(
