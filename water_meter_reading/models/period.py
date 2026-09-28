@@ -232,7 +232,7 @@ class WaterPeriod(models.Model):
         bold = workbook.add_format({'bold': True, 'bg_color': '#4472C4', 'font_color': '#FFFFFF'})
         date_fmt = workbook.add_format({'num_format': 'dd/mm/yyyy'})
 
-        headers = ['Contador', 'Ruta', 'Nombre', 'Abonado', 'Municipio', 'C.P.',
+        headers = ['Contador', 'Ruta', 'Nombre', 'Abonado', 'Pueblo', 'C.P.',
                    'Referencia catastral', 'Fecha', 'Lectura anterior',
                    'Lectura actual', 'Diferencia', 'Observaciones']
         for col, h in enumerate(headers):

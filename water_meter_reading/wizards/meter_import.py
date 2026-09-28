@@ -505,6 +505,7 @@ class WaterMeterImport(models.TransientModel):
             'referencia_catastral': 'Referencia catastral',
             'calle': 'Calle',
             'ubicacion': 'Ubicación',
+            'municipio': 'Pueblo',
             'tipo_contador': 'Tipo de contador',
             'lectura_anterior': 'Lectura anterior',
             'lectura_actual': 'Lectura actual',
@@ -523,7 +524,13 @@ class WaterMeterImport(models.TransientModel):
                     normalized_row.get(self._normalize_header('tipocanon'), '')
                     if key == 'tipo_contador'
                     and not normalized_row.get(self._normalize_header(key))
-                    else normalized_row.get(self._normalize_header(key), '')
+                    else (
+                        normalized_row.get('municipality', '')
+                        or normalized_row.get('municipio', '')
+                        or normalized_row.get('objentidadsingular', '')
+                        if key == 'municipio'
+                        else normalized_row.get(self._normalize_header(key), '')
+                    )
                 )
                 for key in headers
             })
