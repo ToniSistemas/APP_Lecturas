@@ -23,6 +23,11 @@ class WaterNewMeter(models.Model):
     owner_name = fields.Char(string='Nombre')
     subscriber = fields.Char(string='Abonado')
     cadastral_ref = fields.Char(string='Referencia catastral')
+    counter_photo = fields.Image(
+        string='Foto del contador',
+        max_width=1024,
+        max_height=1024,
+    )
     meter_type = fields.Selection([
         ('dom', 'DOM - Doméstico'),
         ('asim', 'ASIM - Asimilado'),

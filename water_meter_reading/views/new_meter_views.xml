@@ -28,6 +28,8 @@
           <field name="state" widget="statusbar" statusbar_visible="pending,registered,rejected"/>
         </header>
         <sheet>
+          <field name="counter_photo" widget="camera_image" class="oe_avatar"
+                 options="{'size': [240, 240], 'zoom': true}"/>
           <group>
             <group>
               <field name="period_id"/>
