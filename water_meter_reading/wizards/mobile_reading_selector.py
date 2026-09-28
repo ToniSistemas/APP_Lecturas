@@ -22,7 +22,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
     meter_id = fields.Many2one(
         'water.meter',
-        string='Contador',
+        string='Ruta',
         required=True,
         domain="[('id', 'in', available_meter_ids)]",
     )
@@ -96,4 +96,6 @@ class WaterReadingMobileSelector(models.TransientModel):
         ], limit=1)
         if not reading:
             raise UserError(_('El contador seleccionado no pertenece a este período.'))
-        return reading._mobile_action()
+        return reading._mobile_action(
+            mobile_street=self.street_id.name if self.street_id else '',
+        )

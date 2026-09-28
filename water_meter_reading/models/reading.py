@@ -367,7 +367,7 @@ class WaterReading(models.Model):
                 })
                 rec.meter_id.write({'meter_number': new_number})
 
-    def _mobile_action(self):
+    def _mobile_action(self, mobile_street=''):
         self.ensure_one()
         view = self.env.ref('water_meter_reading.view_water_reading_mobile_form')
         return {
@@ -377,7 +377,10 @@ class WaterReading(models.Model):
             'res_id': self.id,
             'views': [(view.id, 'form')],
             'target': 'current',
-            'context': {'form_view_initial_mode': 'edit'},
+            'context': {
+                'form_view_initial_mode': 'edit',
+                'mobile_street': mobile_street,
+            },
         }
 
     def action_open_meter(self):
@@ -402,7 +405,6 @@ class WaterReading(models.Model):
             'target': 'current',
             'context': {
                 'default_period_id': self.period_id.id,
-                'default_route': self.meter_route,
                 'default_only_pending': True,
             },
         }
@@ -412,7 +414,8 @@ class WaterReading(models.Model):
         pending_readings = self.period_id.reading_ids.filtered(
             lambda reading: reading.reading_current == 0 and reading.id != self.id
         )
-        current_street = (self.meter_id.street or self.meter_id.address or '').strip().casefold()
+        selected_street = self.env.context.get('mobile_street')
+        current_street = (selected_street or self.meter_id.street or self.meter_id.address or '').strip().casefold()
         pending_readings = pending_readings.filtered(
             lambda reading: (
                 (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
@@ -433,7 +436,7 @@ class WaterReading(models.Model):
         if not next_reading and ordered_pending:
             next_reading = ordered_pending[0]
         if next_reading:
-            return next_reading._mobile_action()
+            return next_reading._mobile_action(mobile_street=current_street)
         return self.action_mobile_done()
 
     @api.onchange('meter_id', 'period_id')

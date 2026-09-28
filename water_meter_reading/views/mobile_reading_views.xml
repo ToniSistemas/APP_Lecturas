@@ -20,9 +20,9 @@
                    domain="[('period_id', '=', period_id), ('active', '=', True)]"
                    options="{'no_create': true, 'no_open': true}"
                        placeholder="Buscar calle"/>
-            <field name="meter_id"
+                 <field name="meter_id" string="Ruta"
                    options="{'no_create': true, 'no_open': true}"
-                   placeholder="Número, abonado, nombre o calle"/>
+                   placeholder="Buscar ruta"/>
             <field name="total_count" string="Total contadores" readonly="1"/>
             <field name="read_count" string="Contadores leídos" readonly="1"/>
             <field name="available_count" string="Pendientes" readonly="1"/>
