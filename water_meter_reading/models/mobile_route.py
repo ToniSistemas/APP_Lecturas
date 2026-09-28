@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class WaterReadingMobileRoute(models.Model):
@@ -22,3 +22,11 @@ class WaterReadingMobileRoute(models.Model):
         '(period_id, name)',
         'La ruta ya existe en este período.',
     )
+
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        routes = self.search(
+            (args or []) + ([('name', operator, name)] if name else []),
+            limit=limit,
+        ).sorted(key=lambda route: (route.route_order, route.name))
+        return [(route.id, route.display_name) for route in routes]
