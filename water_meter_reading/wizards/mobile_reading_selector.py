@@ -22,6 +22,10 @@ class WaterReadingMobileSelector(models.TransientModel):
     all_street = fields.Char(string='Calle + Ubicación')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
     available_meter_ids = fields.Many2many('water.meter', compute='_compute_counts')
+    available_route_ids = fields.Many2many(
+        'water.reading.mobile.route',
+        compute='_compute_counts',
+    )
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
     read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
@@ -132,6 +136,12 @@ class WaterReadingMobileSelector(models.TransientModel):
             readings = wizard._filtered_readings()
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
+            route_names = set(readings.mapped('meter_route'))
+            wizard.available_route_ids = self.env['water.reading.mobile.route'].search([
+                ('period_id', '=', wizard.period_id.id),
+                ('active', '=', True),
+                ('name', 'in', list(route_names)),
+            ])
 
     @api.onchange('street_id', 'pueblo_id', 'route_id', 'pending_street', 'all_street')
     def _onchange_street(self):
