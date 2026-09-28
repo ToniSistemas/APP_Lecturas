@@ -25,19 +25,29 @@ class WaterReadingMobileSelector(models.TransientModel):
     total_count = fields.Integer(compute='_compute_counts', string='Total contadores')
     read_count = fields.Integer(compute='_compute_counts', string='Contadores leídos')
     available_count = fields.Integer(compute='_compute_counts', string='Pendientes')
-    meter_id = fields.Many2one(
-        'water.meter',
+    route_id = fields.Many2one(
+        'water.reading.mobile.route',
         string='Ruta',
         required=True,
-        domain="[('id', 'in', available_meter_ids)]",
+        domain="[('period_id', '=', period_id), ('active', '=', True)]",
     )
 
     @api.model
     def _sync_streets(self, period_id):
         Street = self.env['water.reading.mobile.street'].sudo().with_context(active_test=False)
         Pueblo = self.env['water.reading.mobile.pueblo'].sudo().with_context(active_test=False)
+        Route = self.env['water.reading.mobile.route'].sudo().with_context(active_test=False)
         period = self.env['water.period'].browse(period_id)
         meters = period.reading_ids.sudo().mapped('meter_id')
+        meter_routes = {meter.name.strip() for meter in meters if meter.name and meter.name.strip()}
+        current_routes = Route.search([('period_id', '=', period.id)])
+        current_routes.write({'active': False})
+        for route in meter_routes:
+            record = current_routes.filtered(lambda item: item.name == route)[:1]
+            if record:
+                record.write({'active': True})
+            else:
+                Route.create({'name': route, 'period_id': period.id, 'active': True})
         meter_pueblos = {
             meter.pueblo.strip()
             for meter in meters
@@ -76,12 +86,18 @@ class WaterReadingMobileSelector(models.TransientModel):
     def _onchange_only_pending(self):
         self.street_id = False
         self.pueblo_id = False
+        self.route_id = False
         self.pending_street = False
         self.all_street = False
 
     def _filtered_readings(self):
         self.ensure_one()
         readings = self.period_id.reading_ids.sudo()
+        if self.route_id:
+            selected_route = self.route_id.name.strip().casefold()
+            readings = readings.filtered(
+                lambda reading: (reading.meter_route or '').strip().casefold() == selected_route
+            )
         if self.street_id:
             selected_street = self.street_id.name.strip().casefold()
             readings = readings.filtered(
@@ -107,18 +123,19 @@ class WaterReadingMobileSelector(models.TransientModel):
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
-    @api.onchange('street_id', 'pueblo_id', 'pending_street', 'all_street')
+    @api.onchange('street_id', 'pueblo_id', 'route_id', 'pending_street', 'all_street')
     def _onchange_street(self):
         self._compute_counts()
-        if self.meter_id and self.meter_id not in self.available_meter_ids:
-            self.meter_id = False
+        if self.route_id and not self._filtered_readings().filtered(
+            lambda reading: reading.meter_route == self.route_id.name
+        ):
+            self.route_id = False
 
     def action_open_reading(self):
         self.ensure_one()
-        reading = self.env['water.reading'].search([
-            ('period_id', '=', self.period_id.id),
-            ('meter_id', '=', self.meter_id.id),
-        ], limit=1)
+        reading = self._filtered_readings().filtered(
+            lambda item: item.meter_route == self.route_id.name
+        )[:1]
         if not reading:
             raise UserError(_('El contador seleccionado no pertenece a este período.'))
         return reading._mobile_action(
