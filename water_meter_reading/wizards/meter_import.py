@@ -129,6 +129,8 @@ class WaterMeterImport(models.TransientModel):
             }
             if 'municipio' in normalized_row and 'pueblo' not in normalized_row:
                 normalized_row['pueblo'] = normalized_row['municipio']
+            if 'objentidadsingular' in normalized_row:
+                normalized_row['pueblo'] = normalized_row['objentidadsingular']
             normalized_rows.append(normalized_row)
         missing_route_values = self.env.context.get('missing_routes', {})
         missing_route_lines = []
@@ -178,6 +180,8 @@ class WaterMeterImport(models.TransientModel):
                 for header, field in self._column_fields.items()
                 if field in available_fields
             }
+            if 'pueblo' in row:
+                values['municipality'] = row['pueblo']
             values = {
                 field: str(value).strip() if value is not None else ''
                 for field, value in values.items()
@@ -524,15 +528,18 @@ class WaterMeterImport(models.TransientModel):
                 self._normalize_header(key): value
                 for key, value in row.items()
             }
+            pueblo_value = normalized_row.get('objentidadsingular')
+            if pueblo_value is None:
+                pueblo_value = normalized_row.get('municipality')
+            if pueblo_value is None:
+                pueblo_value = normalized_row.get('municipio')
             writer.writerow({
                 headers[key]: (
                     normalized_row.get(self._normalize_header('tipocanon'), '')
                     if key == 'tipo_contador'
                     and not normalized_row.get(self._normalize_header(key))
                     else (
-                        normalized_row.get('municipality', '')
-                        or normalized_row.get('municipio', '')
-                        or normalized_row.get('objentidadsingular', '')
+                        pueblo_value or ''
                         if key == 'municipio'
                         else normalized_row.get(self._normalize_header(key), '')
                     )
