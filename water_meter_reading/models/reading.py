@@ -189,9 +189,19 @@ class WaterReading(models.Model):
             'estimated_by': self.env.user.id,
             'estimated_at': fields.Datetime.now(),
         })
+        view = self.env.ref('water_meter_reading.view_water_reading_mobile_form')
         return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
+            'type': 'ir.actions.act_window',
+            'name': _('Lectura de contador'),
+            'res_model': self._name,
+            'res_id': self.id,
+            'views': [(view.id, 'form')],
+            'target': 'current',
+            'context': {
+                'form_view_initial_mode': 'edit',
+                'mobile_street': self.env.context.get('mobile_street', ''),
+                'mobile_pueblo': self.env.context.get('mobile_pueblo', ''),
+            },
         }
 
     def _get_anomaly_values(self):
