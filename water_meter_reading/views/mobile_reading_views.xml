@@ -20,6 +20,10 @@
                    domain="[('period_id', '=', period_id), ('active', '=', True)]"
                    options="{'no_create': true, 'no_open': true}"
                        placeholder="Buscar calle"/>
+                <field name="pueblo_id" string="Pueblo"
+                     domain="[('period_id', '=', period_id), ('active', '=', True)]"
+                     options="{'no_create': true, 'no_open': true}"
+                     placeholder="Buscar pueblo"/>
                  <field name="meter_id" string="Ruta"
                    options="{'no_create': true, 'no_open': true}"
                    placeholder="Buscar ruta"/>

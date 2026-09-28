@@ -13,6 +13,11 @@ class WaterReadingMobileSelector(models.TransientModel):
         string='Calle',
         ondelete='set null',
     )
+    pueblo_id = fields.Many2one(
+        'water.reading.mobile.pueblo',
+        string='Pueblo',
+        ondelete='set null',
+    )
     pending_street = fields.Char(string='Calle + Ubicación')
     all_street = fields.Char(string='Calle + Ubicación')
     only_pending = fields.Boolean(string='Solo pendientes', default=True)
@@ -30,8 +35,22 @@ class WaterReadingMobileSelector(models.TransientModel):
     @api.model
     def _sync_streets(self, period_id):
         Street = self.env['water.reading.mobile.street'].sudo().with_context(active_test=False)
+        Pueblo = self.env['water.reading.mobile.pueblo'].sudo().with_context(active_test=False)
         period = self.env['water.period'].browse(period_id)
         meters = period.reading_ids.sudo().mapped('meter_id')
+        meter_pueblos = {
+            meter.pueblo.strip()
+            for meter in meters
+            if meter.pueblo and meter.pueblo.strip()
+        }
+        current_pueblos = Pueblo.search([('period_id', '=', period.id)])
+        current_pueblos.write({'active': False})
+        for pueblo in meter_pueblos:
+            record = current_pueblos.filtered(lambda item: item.name == pueblo)[:1]
+            if record:
+                record.write({'active': True})
+            else:
+                Pueblo.create({'name': pueblo, 'period_id': period.id, 'active': True})
         meter_streets = {
             (meter.street or meter.address).strip()
             for meter in meters
@@ -56,6 +75,7 @@ class WaterReadingMobileSelector(models.TransientModel):
     @api.onchange('only_pending')
     def _onchange_only_pending(self):
         self.street_id = False
+        self.pueblo_id = False
         self.pending_street = False
         self.all_street = False
 
@@ -68,11 +88,16 @@ class WaterReadingMobileSelector(models.TransientModel):
                 lambda reading: (reading.meter_id.street or reading.meter_id.address or '')
                 .strip().casefold() == selected_street
             )
+        if self.pueblo_id:
+            selected_pueblo = self.pueblo_id.name.strip().casefold()
+            readings = readings.filtered(
+                lambda reading: (reading.meter_id.pueblo or '').strip().casefold() == selected_pueblo
+            )
         if self.only_pending:
             readings = readings.filtered(lambda reading: reading.reading_current == 0)
         return readings
 
-    @api.depends('period_id', 'street_id', 'pending_street', 'all_street', 'only_pending')
+    @api.depends('period_id', 'street_id', 'pueblo_id', 'pending_street', 'all_street', 'only_pending')
     def _compute_counts(self):
         for wizard in self:
             all_readings = wizard.period_id.reading_ids.sudo()
@@ -82,7 +107,7 @@ class WaterReadingMobileSelector(models.TransientModel):
             wizard.available_meter_ids = readings.mapped('meter_id')
             wizard.available_count = len(wizard.available_meter_ids)
 
-    @api.onchange('street_id', 'pending_street', 'all_street')
+    @api.onchange('street_id', 'pueblo_id', 'pending_street', 'all_street')
     def _onchange_street(self):
         self._compute_counts()
         if self.meter_id and self.meter_id not in self.available_meter_ids:
@@ -98,4 +123,5 @@ class WaterReadingMobileSelector(models.TransientModel):
             raise UserError(_('El contador seleccionado no pertenece a este período.'))
         return reading._mobile_action(
             mobile_street=self.street_id.name if self.street_id else '',
+            mobile_pueblo=self.pueblo_id.name if self.pueblo_id else '',
         )
