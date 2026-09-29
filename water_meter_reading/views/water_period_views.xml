@@ -161,17 +161,35 @@
                 </list>
               </field>
               <field name="unread_reading_ids" invisible="not show_unread">
-                <list string="Lecturas sin leer" decoration-danger="True">
-                  <field name="meter_id" string="Contador" readonly="1"
+                <list string="Lecturas" default_order="meter_route_order asc"
+                    decoration-danger="reading_current == 0 or difference &lt; 0">
+                  <field name="allow_edit_previous" column_invisible="1"/>
+                  <field name="meter_id" string="Contador" readonly="1" width="110px"
                          options="{'no_open': false, 'open_form_view': true}"/>
-                  <field name="meter_route_order" string="Ruta" readonly="1"/>
-                  <field name="meter_owner_link" string="Nombre" readonly="1"/>
-                  <field name="reading_previous" string="Lectura anterior" readonly="1"/>
-                  <field name="reading_current" string="Lectura actual" readonly="1"/>
-                  <field name="difference" string="Consumo" readonly="1"/>
-                  <field name="observations" readonly="1"/>
-                  <field name="counter_photo" widget="image" string="Foto" readonly="1"
-                         options="{'size': [64, 64], 'zoom': true}"/>
+                  <field name="meter_route_order" string="Ruta" readonly="1" width="80px"/>
+                  <field name="meter_owner_link" string="Nombre" readonly="1" width="220px"/>
+                  <field name="meter_pueblo" string="Pueblo" readonly="1" optional="hide"/>
+                  <field name="meter_zip" string="C.P." readonly="1" optional="hide"/>
+                  <field name="date" optional="hide"/>
+                  <field name="reading_previous" string="Anterior" readonly="1" width="90px"/>
+                  <field name="reading_current" string="Actual" readonly="1" width="90px"/>
+                  <field name="difference" string="Consumo" readonly="1" width="85px"/>
+                  <button name="action_estimate_from_period" type="object"
+                     string="Estimar" icon="fa-calculator"
+                     invisible="reading_current != 0"/>
+                  <field name="new_meter" string="Contador nuevo" optional="hide"/>
+                  <field name="previous_meter_number" string="Contador anterior"
+                    readonly="1" optional="hide"/>
+                  <field name="new_meter_number" string="Nuevo contador"
+                    invisible="not new_meter" optional="hide"/>
+                  <field name="meter_reversed" string="Contador al revés" optional="hide"/>
+                  <field name="meter_max_value" string="Valor máximo" optional="hide"/>
+                  <field name="meter_closed" string="Cerrado" optional="hide"/>
+                  <field name="meter_missing" string="Sin contador" optional="hide"/>
+                  <field name="meter_broken" string="Roto" optional="hide"/>
+                  <field name="observations" width="180px" readonly="1" optional="show"/>
+                  <field name="counter_photo" widget="camera_image" string="Foto"
+                    options="{'size': [64, 64], 'zoom': true}" optional="show"/>
                 </list>
               </field>
             </page>
