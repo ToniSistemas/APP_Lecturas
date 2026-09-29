@@ -128,7 +128,6 @@
                     default_order="meter_route_order asc, meter_route asc"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
-                  <field name="meter_route_order" column_invisible="1"/>
                             <field name="meter_id" string="Contador" readonly="1" width="110px"
                               optional="show"
                               options="{'no_open': false, 'open_form_view': true}"/>
