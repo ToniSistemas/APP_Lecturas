@@ -12,6 +12,7 @@ class WaterReading(models.Model):
     meter_id = fields.Many2one('water.meter', string='Contador', required=True, ondelete='cascade')
     meter_number = fields.Char(string='Contador Nº', readonly=True)
     meter_route = fields.Char(related='meter_id.name', string='Ruta', store=True, readonly=True)
+    meter_route_order = fields.Integer(compute='_compute_meter_route_order', store=True, index=True)
     meter_owner_name = fields.Char(related='meter_id.owner_name', string='Nombre', store=True, readonly=True)
     meter_route_link = fields.Html(compute='_compute_meter_links', string='Ruta', sanitize=True)
     meter_owner_link = fields.Html(compute='_compute_meter_links', string='Nombre', sanitize=True)
@@ -81,6 +82,12 @@ class WaterReading(models.Model):
                 f'<a href="{href}">{escape(rec.meter_route or "")}</a>'
                 if rec.meter_id else ''
             )
+
+    @api.depends('meter_route')
+    def _compute_meter_route_order(self):
+        for rec in self:
+            route = (rec.meter_route or '').strip()
+            rec.meter_route_order = int(route) if route.isdigit() else 0
             rec.meter_owner_link = (
                 f'<a href="{href}">{escape(rec.meter_owner_name or "")}</a>'
                 if rec.meter_id else ''
@@ -203,6 +210,11 @@ class WaterReading(models.Model):
                 'mobile_pueblo': self.env.context.get('mobile_pueblo', ''),
             },
         }
+
+    def action_estimate_from_period(self):
+        self.ensure_one()
+        self.action_estimate_current()
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
 
     def _get_anomaly_values(self):
         self.ensure_one()

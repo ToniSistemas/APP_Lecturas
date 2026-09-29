@@ -125,8 +125,10 @@
             <page string="Lecturas" name="readings">
               <field name="reading_ids" invisible="show_unread">
                 <list string="Lecturas" editable="bottom"
+                    default_order="meter_route_order asc, meter_route asc"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
+                  <field name="meter_route_order" column_invisible="1"/>
                             <field name="meter_id" string="Contador" readonly="1" width="110px"
                               optional="show"
                               options="{'no_open': false, 'open_form_view': true}"/>
@@ -139,6 +141,9 @@
                         readonly="not allow_edit_previous" optional="show"/>
                       <field name="reading_current" string="Actual" width="90px" optional="show"/>
                       <field name="difference" string="Consumo" width="85px" readonly="1" optional="show"/>
+                        <button name="action_estimate_from_period" type="object"
+                          string="Estimar" icon="fa-calculator"
+                          invisible="reading_current != 0"/>
                       <field name="new_meter" string="Contador nuevo" optional="hide"/>
                       <field name="previous_meter_number" string="Contador anterior"
                         readonly="1" optional="hide"/>
