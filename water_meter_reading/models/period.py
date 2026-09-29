@@ -175,6 +175,8 @@ class WaterPeriod(models.Model):
 
     def action_open_gap_estimation(self):
         self.ensure_one()
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden estimar períodos anteriores.'))
         target = self._get_previous_period()
         if not target:
             raise UserError(_('No existe un período anterior para estimar.'))
