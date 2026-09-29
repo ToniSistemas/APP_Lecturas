@@ -8,6 +8,11 @@ class WaterReading(models.Model):
     _description = 'Meter Reading'
     _order = 'date desc'
 
+    _unique_meter_period = models.UniqueIndex(
+        '(meter_id, period_id)',
+        'Ya existe una lectura para este contador en este período.',
+    )
+
     name = fields.Char(string='Referencia', readonly=True, copy=False)
     meter_id = fields.Many2one('water.meter', string='Contador', required=True, ondelete='cascade')
     meter_number = fields.Char(string='Contador Nº', readonly=True)
