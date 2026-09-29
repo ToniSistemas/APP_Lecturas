@@ -153,6 +153,11 @@
           </group>
           <notebook>
             <page string="Lecturas" name="readings">
+              <div class="mb-2">
+                <button name="action_view_readings_search" type="object"
+                        string="Buscar / Filtrar lecturas" class="btn btn-secondary btn-sm"
+                        icon="fa-search"/>
+              </div>
               <field name="reading_ids" invisible="show_unread">
                 <list string="Lecturas" editable="bottom"
                     default_order="meter_route_order asc"

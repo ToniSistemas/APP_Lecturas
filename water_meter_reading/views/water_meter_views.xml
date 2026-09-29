@@ -138,9 +138,18 @@
           domain="[('reading_current','=',0)]"/>
         <filter string="Lecturas estimadas" name="estimated_readings"
           domain="[('estimated_reading','=',True)]"/>
-        <filter string="Cerrado" name="meter_closed" domain="[('meter_closed','=',True)]"/>
+        <filter string="No estimadas" name="not_estimated_readings"
+          domain="[('estimated_reading','=',False)]"/>
+        <filter string="Contador nuevo" name="new_meter_readings"
+          domain="[('new_meter','=',True)]"/>
+        <filter string="Contador existente" name="existing_meter_readings"
+          domain="[('new_meter','=',False)]"/>
+          <filter string="Cerrado" name="meter_closed" domain="[('meter_closed','=',True)]"/>
+          <filter string="No cerrado" name="meter_not_closed" domain="[('meter_closed','=',False)]"/>
         <filter string="Sin contador" name="meter_missing" domain="[('meter_missing','=',True)]"/>
+        <filter string="Con contador" name="meter_present" domain="[('meter_missing','=',False)]"/>
         <filter string="Roto" name="meter_broken" domain="[('meter_broken','=',True)]"/>
+        <filter string="No roto" name="meter_not_broken" domain="[('meter_broken','=',False)]"/>
         <filter string="Diferencia negativa" name="negative_diff"
                 domain="[('difference','&lt;',0)]"/>
         <separator/>
