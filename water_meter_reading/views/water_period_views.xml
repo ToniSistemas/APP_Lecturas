@@ -125,7 +125,7 @@
             <page string="Lecturas" name="readings">
               <field name="reading_ids" invisible="show_unread">
                 <list string="Lecturas" editable="bottom"
-                    default_order="meter_route_order asc, meter_route asc"
+                    default_order="meter_route_order asc"
                     decoration-danger="reading_current == 0 or difference &lt; 0">
                   <field name="allow_edit_previous" column_invisible="1"/>
                             <field name="meter_id" string="Contador" readonly="1" width="110px"
