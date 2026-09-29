@@ -32,6 +32,27 @@ class WaterMeter(models.Model):
     ], string='Tipo de contador', tracking=True)
 
     reading_ids = fields.One2many('water.reading', 'meter_id', string='Lecturas')
+    has_estimated_readings = fields.Boolean(compute='_compute_reading_flags', store=True)
+    has_new_meter_readings = fields.Boolean(compute='_compute_reading_flags', store=True)
+    has_closed_readings = fields.Boolean(compute='_compute_reading_flags', store=True)
+    has_missing_readings = fields.Boolean(compute='_compute_reading_flags', store=True)
+    has_broken_readings = fields.Boolean(compute='_compute_reading_flags', store=True)
+
+    @api.depends(
+        'reading_ids.estimated_reading',
+        'reading_ids.new_meter',
+        'reading_ids.meter_closed',
+        'reading_ids.meter_missing',
+        'reading_ids.meter_broken',
+    )
+    def _compute_reading_flags(self):
+        for meter in self:
+            readings = meter.reading_ids
+            meter.has_estimated_readings = any(reading.estimated_reading for reading in readings)
+            meter.has_new_meter_readings = any(reading.new_meter for reading in readings)
+            meter.has_closed_readings = any(reading.meter_closed for reading in readings)
+            meter.has_missing_readings = any(reading.meter_missing for reading in readings)
+            meter.has_broken_readings = any(reading.meter_broken for reading in readings)
 
     @api.model_create_multi
     def create(self, vals_list):

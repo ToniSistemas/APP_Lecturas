@@ -54,6 +54,23 @@
         <filter string="Activos" name="active" domain="[('active','=',True)]"/>
         <filter string="Archivados" name="archived" domain="[('active','=',False)]"/>
         <filter string="Todos" name="all" domain="[('active','in',[True,False])]"/>
+        <separator/>
+        <filter string="Con lecturas estimadas" name="with_estimated_readings"
+          domain="[('has_estimated_readings','=',True)]"/>
+        <filter string="Con contador nuevo" name="with_new_meter_readings"
+          domain="[('has_new_meter_readings','=',True)]"/>
+        <filter string="Con contador cerrado" name="with_closed_readings"
+          domain="[('has_closed_readings','=',True)]"/>
+        <filter string="Sin contador" name="with_missing_readings"
+          domain="[('has_missing_readings','=',True)]"/>
+        <filter string="Contador roto" name="with_broken_readings"
+          domain="[('has_broken_readings','=',True)]"/>
+        <group>
+          <filter string="Pueblo" name="group_pueblo" context="{'group_by': 'pueblo'}"/>
+          <filter string="Tipo de contador" name="group_meter_type"
+            context="{'group_by': 'meter_type'}"/>
+          <filter string="Activo" name="group_active" context="{'group_by': 'active'}"/>
+        </group>
       </search>
     </field>
   </record>
