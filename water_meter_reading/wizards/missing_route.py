@@ -1,5 +1,4 @@
 from odoo import _, fields, models
-from odoo.exceptions import ValidationError
 
 
 class WaterMeterMissingRoute(models.TransientModel):
@@ -11,10 +10,27 @@ class WaterMeterMissingRoute(models.TransientModel):
 
     def action_continue(self):
         self.ensure_one()
-        missing = self.line_ids.filtered(lambda line: not (line.route or '').strip())
-        if missing:
-            raise ValidationError(_('Completa todas las rutas antes de continuar.'))
-        route_values = {line.row_number: (line.route or '').strip() for line in self.line_ids}
+        existing_routes = set(
+            self.env['water.meter'].with_context(active_test=False).search([]).mapped('name')
+        )
+        route_values = {}
+        used_routes = set(existing_routes)
+        used_routes.update(
+            (line.route or '').strip()
+            for line in self.line_ids
+            if (line.route or '').strip()
+        )
+        automatic_number = 1
+        for line in self.line_ids.sorted('row_number'):
+            route = (line.route or '').strip()
+            if not route:
+                while f'NR_{automatic_number}' in used_routes:
+                    automatic_number += 1
+                route = f'NR_{automatic_number}'
+                automatic_number += 1
+                line.route = route
+            route_values[line.row_number] = route
+            used_routes.add(route)
         return self.import_id.with_context(missing_routes=route_values).action_import()
 
 
