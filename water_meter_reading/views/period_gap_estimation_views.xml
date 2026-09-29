@@ -6,6 +6,9 @@
     <field name="arch" type="xml">
       <form string="Estimar período sin lecturas">
         <header>
+          <button name="action_recalculate" type="object"
+                  string="Recalcular vista previa" class="btn-secondary"
+                  icon="fa-refresh"/>
           <button name="action_confirm" type="object"
                   string="Confirmar estimación" class="btn-primary"
                   icon="fa-check"/>
@@ -18,6 +21,9 @@
             <field name="source_period_id"/>
             <field name="target_period_id"/>
             <field name="variation"/>
+            <div class="text-muted">
+              La variación ajusta el porcentaje histórico aplicado al consumo del período a estimar. La proporción se calcula automáticamente usando los consumos históricos del contador.
+            </div>
             <field name="confirmed"/>
             <field name="summary" nolabel="1"/>
           </group>
@@ -29,11 +35,14 @@
               <field name="before_reading"/>
               <field name="source_reading"/>
               <field name="estimated_reading"/>
-              <field name="share"/>
+              <field name="share" string="Porcentaje estimado"/>
               <field name="message"/>
             </list>
           </field>
           <footer>
+            <button name="action_recalculate" type="object"
+                    string="Recalcular vista previa" class="btn-secondary"
+                    icon="fa-refresh"/>
             <button name="action_confirm" type="object"
                     string="Confirmar estimación" class="btn-primary"/>
             <button string="Cancelar" special="cancel" class="btn-secondary"/>

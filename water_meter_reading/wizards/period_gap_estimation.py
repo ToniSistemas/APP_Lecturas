@@ -12,7 +12,8 @@ class WaterPeriodGapEstimation(models.TransientModel):
         ('-5', '-5%'),
         ('0', '0%'),
         ('5', '+5%'),
-    ], string='Variación', default='0', required=True)
+     ], string='Variación histórica aplicada', default='0', required=True,
+         help='Ajusta la proporción histórica calculada en -5%, 0% o +5%.')
     confirmed = fields.Boolean(string='Confirmo la estimación')
     summary = fields.Text(string='Resumen', readonly=True)
     line_ids = fields.One2many('water.period.gap.estimation.line', 'wizard_id', string='Vista previa')
@@ -38,6 +39,7 @@ class WaterPeriodGapEstimation(models.TransientModel):
 
     def action_prepare(self):
         self.ensure_one()
+        self.confirmed = False
         current = self.source_period_id
         target = current._get_previous_period()
         if not target:
@@ -115,6 +117,10 @@ class WaterPeriodGapEstimation(models.TransientModel):
             'target': 'new',
         }
 
+    def action_recalculate(self):
+        self.ensure_one()
+        return self.action_prepare()
+
     def action_confirm(self):
         self.ensure_one()
         if self.source_period_id.state == 'closed' or self.target_period_id.state == 'closed':
@@ -162,7 +168,7 @@ class WaterPeriodGapEstimationLine(models.TransientModel):
     before_reading = fields.Integer(string='Lectura límite', readonly=True)
     source_reading = fields.Integer(string='Lectura real posterior', readonly=True)
     estimated_reading = fields.Integer(string='Lectura estimada', readonly=True)
-    share = fields.Float(string='Proporción', readonly=True)
+    share = fields.Float(string='Porcentaje estimado del período', readonly=True)
     status = fields.Selection([
         ('ready', 'Lista'),
         ('unavailable', 'Sin datos suficientes'),
