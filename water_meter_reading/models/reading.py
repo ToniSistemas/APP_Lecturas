@@ -539,6 +539,8 @@ class WaterReading(models.Model):
                 period_id = vals.get('period_id')
                 if period_id:
                     period = self.env['water.period'].browse(period_id)
+                    if period.state == 'closed':
+                        raise ValidationError(_('No se pueden crear lecturas en un período cerrado.'))
                     t = int(period.trimester)
                     prev_t = '4' if t == 1 else str(t - 1)
                     prev_y = period.year - 1 if t == 1 else period.year
@@ -567,6 +569,12 @@ class WaterReading(models.Model):
         return records
 
     def write(self, vals):
+        target_period = self.env['water.period'].browse(vals['period_id']) if vals.get('period_id') else False
+        if any(
+            record.period_id.state == 'closed' or (target_period and target_period.state == 'closed')
+            for record in self
+        ):
+            raise ValidationError(_('No se pueden modificar lecturas de un período cerrado.'))
         if (
             not self.env.context.get('skip_closed_reading_sync')
             and ('meter_closed' in vals or 'reading_current' in vals or 'reading_previous' in vals)
