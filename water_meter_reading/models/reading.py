@@ -422,6 +422,14 @@ class WaterReading(models.Model):
 
     def action_mobile_next(self):
         self.ensure_one()
+        return self._mobile_move(1)
+
+    def action_mobile_previous(self):
+        self.ensure_one()
+        return self._mobile_move(-1)
+
+    def _mobile_move(self, direction):
+        self.ensure_one()
         pending_readings = self.period_id.reading_ids.filtered(
             lambda reading: reading.reading_current == 0 and reading.id != self.id
         )
@@ -446,14 +454,16 @@ class WaterReading(models.Model):
 
         ordered_pending = pending_readings.sorted(key=route_key)
         current_key = route_key(self)
-        next_reading = next(
-            (reading for reading in ordered_pending if route_key(reading) > current_key),
-            None,
-        )
-        if not next_reading and ordered_pending:
-            next_reading = ordered_pending[0]
-        if next_reading:
-            return next_reading._mobile_action(
+        if not ordered_pending:
+            return self.action_mobile_done()
+        if direction > 0:
+            candidates = ordered_pending.filtered(lambda reading: route_key(reading) > current_key)
+            target = candidates[0] if candidates else ordered_pending[0]
+        else:
+            candidates = ordered_pending.filtered(lambda reading: route_key(reading) < current_key)
+            target = candidates[-1] if candidates else ordered_pending[-1]
+        if target:
+            return target._mobile_action(
                 mobile_street=current_street,
                 mobile_pueblo=selected_pueblo or '',
             )
