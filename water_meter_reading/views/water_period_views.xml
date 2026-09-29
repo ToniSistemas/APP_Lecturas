@@ -70,6 +70,9 @@
                   icon="fa-database"
                   groups="base.group_system,water_meter_reading.group_water_supervisor"
                   invisible="state == 'closed'"/>
+                  <button name="action_open_gap_estimation" type="object"
+                    string="Estimar período anterior" class="btn-secondary"
+                    icon="fa-calculator" invisible="state == 'closed'"/>
           <button name="action_export_excel" type="object"
                   string="Exportar Excel" class="btn btn-secondary"
                   icon="fa-download"/>

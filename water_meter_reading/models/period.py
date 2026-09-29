@@ -173,6 +173,17 @@ class WaterPeriod(models.Model):
             },
         }
 
+    def action_open_gap_estimation(self):
+        self.ensure_one()
+        target = self._get_previous_period()
+        if not target:
+            raise UserError(_('No existe un período anterior para estimar.'))
+        wizard = self.env['water.period.gap.estimation'].create({
+            'source_period_id': self.id,
+            'target_period_id': target.id,
+        })
+        return wizard.action_prepare()
+
     def action_review_anomalies(self):
         self.ensure_one()
         self.reading_ids._refresh_anomalies()
