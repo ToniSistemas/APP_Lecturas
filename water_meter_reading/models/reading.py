@@ -329,6 +329,14 @@ class WaterReading(models.Model):
         if self.meter_closed:
             self.reading_current = self.reading_previous
 
+    @api.constrains('meter_closed', 'reading_previous', 'reading_current')
+    def _check_closed_reading_value(self):
+        for record in self:
+            if record.meter_closed and record.reading_current != record.reading_previous:
+                record.with_context(skip_closed_reading_sync=True).write({
+                    'reading_current': record.reading_previous,
+                })
+
     @api.constrains('reading_current', 'reading_previous', 'meter_reversed')
     def _check_reading_order(self):
         for rec in self:
@@ -554,9 +562,16 @@ class WaterReading(models.Model):
         return records
 
     def write(self, vals):
-        if vals.get('meter_closed') and not self.env.context.get('skip_closed_reading_sync'):
+        if (
+            not self.env.context.get('skip_closed_reading_sync')
+            and ('meter_closed' in vals or 'reading_current' in vals or 'reading_previous' in vals)
+        ):
             results = []
             for record in self:
+                is_closed = vals.get('meter_closed', record.meter_closed)
+                if not is_closed:
+                    results.append(record.with_context(skip_closed_reading_sync=True).write(vals))
+                    continue
                 record_vals = dict(vals, reading_current=vals.get('reading_previous', record.reading_previous))
                 results.append(record.with_context(skip_closed_reading_sync=True).write(record_vals))
             return all(results)
