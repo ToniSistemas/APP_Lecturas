@@ -17,6 +17,7 @@ class WaterMeterImport(models.TransientModel):
     import_readings = fields.Boolean(string='Importar lecturas', default=False, readonly=True)
     confirmation_required = fields.Boolean(readonly=True)
     warning_message = fields.Text(string='Lecturas diferentes', readonly=True)
+    missing_route_values = fields.Json(string='Rutas completadas', readonly=True)
 
     _column_fields = {
         'Ruta': 'name',
@@ -111,7 +112,10 @@ class WaterMeterImport(models.TransientModel):
 
     def action_import_confirmed(self):
         self.ensure_one()
-        return self.with_context(confirm_reading_mismatches=True).action_import()
+        return self.with_context(
+            confirm_reading_mismatches=True,
+            missing_routes=self.missing_route_values or {},
+        ).action_import()
 
     def action_import(self):
         self.ensure_one()
@@ -132,7 +136,16 @@ class WaterMeterImport(models.TransientModel):
             if 'objentidadsingular' in normalized_row:
                 normalized_row['pueblo'] = normalized_row['objentidadsingular']
             normalized_rows.append(normalized_row)
-        missing_route_values = self.env.context.get('missing_routes', {})
+        missing_route_values = {
+            int(row_number): route
+            for row_number, route in (
+                self.env.context.get('missing_routes')
+                or self.missing_route_values
+                or {}
+            ).items()
+        }
+        if missing_route_values:
+            self.missing_route_values = missing_route_values
         missing_route_lines = []
         for row_number, row in enumerate(normalized_rows, start=2):
             route = str(row.get(self._normalize_header('Ruta'), '') or '').strip()
