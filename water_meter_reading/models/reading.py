@@ -82,16 +82,16 @@ class WaterReading(models.Model):
                 f'<a href="{href}">{escape(rec.meter_route or "")}</a>'
                 if rec.meter_id else ''
             )
+            rec.meter_owner_link = (
+                f'<a href="{href}">{escape(rec.meter_owner_name or "")}</a>'
+                if rec.meter_id else ''
+            )
 
     @api.depends('meter_route')
     def _compute_meter_route_order(self):
         for rec in self:
             route = (rec.meter_route or '').strip()
             rec.meter_route_order = int(route) if route.isdigit() else 0
-            rec.meter_owner_link = (
-                f'<a href="{href}">{escape(rec.meter_owner_name or "")}</a>'
-                if rec.meter_id else ''
-            )
     history_reading_ids = fields.Many2many(
         'water.reading',
         relation='water_mobile_history_rel',
