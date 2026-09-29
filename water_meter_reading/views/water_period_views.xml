@@ -80,7 +80,7 @@
         <header>
           <button name="action_start_mobile_readings" type="object"
                   string="Modo lectura móvil" class="btn-primary"
-                  icon="fa-mobile" invisible="not reading_ids"/>
+              icon="fa-mobile" invisible="not reading_ids or state == 'closed'"/>
             <button name="action_open_new_meters" type="object"
               string="Contadores nuevos" class="btn-secondary"
               icon="fa-plus-circle"/>

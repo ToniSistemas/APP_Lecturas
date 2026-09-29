@@ -143,6 +143,8 @@ class WaterPeriod(models.Model):
 
     def action_start_mobile_readings(self):
         self.ensure_one()
+        if self.state == 'closed':
+            raise UserError(_('No se puede iniciar el modo lectura en un período cerrado.'))
         if not self.reading_ids:
             raise UserError(_('Importa primero el censo de contadores del período.'))
         self.env['water.reading.mobile.selector']._sync_streets(self.id)
