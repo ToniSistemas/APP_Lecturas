@@ -101,18 +101,6 @@
                 class="btn-secondary" invisible="reading_current != 0"/>
               <field name="estimated_reading" readonly="1" invisible="not estimated_reading"/>
 
-          <group string="Últimas lecturas">
-            <field name="history_reading_ids" readonly="1" nolabel="1">
-              <list string="Últimas lecturas">
-                <field name="period_id" string="Período"/>
-                <field name="reading_previous" string="Lectura anterior"/>
-                <field name="reading_current" string="Lectura actual"/>
-                <field name="difference" string="Consumo"/>
-                <field name="estimated_reading" string="Estimada"/>
-              </list>
-            </field>
-          </group>
-
           <group string="Incidencias del contador">
             <group>
               <field name="new_meter"/>
@@ -127,6 +115,19 @@
               <field name="meter_missing"/>
               <field name="meter_broken"/>
             </group>
+          </group>
+
+          <group string="Últimas lecturas">
+            <field name="history_reading_ids" readonly="1" nolabel="1">
+              <list string="Últimas lecturas" default_order="period_history_order desc">
+                <field name="period_history_order" column_invisible="1"/>
+                <field name="period_id" string="Período"/>
+                <field name="reading_previous" string="Lectura anterior"/>
+                <field name="reading_current" string="Lectura actual"/>
+                <field name="difference" string="Consumo"/>
+                <field name="estimated_reading" string="Estimada"/>
+              </list>
+            </field>
           </group>
 
           <group string="Observaciones">

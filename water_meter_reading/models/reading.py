@@ -54,6 +54,10 @@ class WaterReading(models.Model):
     observations = fields.Text(string='Observaciones')
     user_id = fields.Many2one('res.users', string='Capturado por', default=lambda self: self.env.user)
     period_id = fields.Many2one('water.period', string='Período', ondelete='set null', index=True)
+    period_history_order = fields.Integer(
+        compute='_compute_period_history_order', store=True,
+        string='Orden del período',
+    )
     photo_ids = fields.One2many('water.reading.photo', 'reading_id', string='Fotografías')
     counter_photo = fields.Image(string='Foto del contador', max_width=1024, max_height=1024)
     allow_edit_previous = fields.Boolean(
@@ -119,12 +123,24 @@ class WaterReading(models.Model):
                 'total': len(readings),
             }
 
-    @api.depends('meter_id')
+    @api.depends('period_id.year', 'period_id.trimester')
+    def _compute_period_history_order(self):
+        for reading in self:
+            reading.period_history_order = (
+                reading.period_id.year * 4 + int(reading.period_id.trimester)
+                if reading.period_id else 0
+            )
+
+    @api.depends(
+        'meter_id', 'meter_id.reading_ids',
+        'meter_id.reading_ids.period_id.year',
+        'meter_id.reading_ids.period_id.trimester',
+    )
     def _compute_history_readings(self):
         for rec in self:
             readings = self.search(
-                [('meter_id', '=', rec.meter_id.id)],
-                order='date desc, id desc',
+                [('meter_id', '=', rec.meter_id.id), ('period_id', '!=', False)],
+                order='period_history_order desc, id desc',
                 limit=4,
             ) if rec.meter_id else self.browse()
             rec.history_reading_ids = [(6, 0, readings.ids)]
