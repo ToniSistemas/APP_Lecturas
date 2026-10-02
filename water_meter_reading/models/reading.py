@@ -213,6 +213,7 @@ class WaterReading(models.Model):
                 'form_view_initial_mode': 'edit',
                 'mobile_street': self.env.context.get('mobile_street', ''),
                 'mobile_pueblo': self.env.context.get('mobile_pueblo', ''),
+                'mobile_only_pending': self.env.context.get('mobile_only_pending', True),
             },
         }
 
@@ -407,7 +408,7 @@ class WaterReading(models.Model):
                 })
                 rec.meter_id.write({'meter_number': new_number})
 
-    def _mobile_action(self, mobile_street='', mobile_pueblo=''):
+    def _mobile_action(self, mobile_street='', mobile_pueblo='', mobile_only_pending=True):
         self.ensure_one()
         view = self.env.ref('water_meter_reading.view_water_reading_mobile_form')
         return {
@@ -421,6 +422,7 @@ class WaterReading(models.Model):
                 'form_view_initial_mode': 'edit',
                 'mobile_street': mobile_street,
                 'mobile_pueblo': mobile_pueblo,
+                'mobile_only_pending': mobile_only_pending,
             },
         }
 
@@ -446,7 +448,7 @@ class WaterReading(models.Model):
             'target': 'current',
             'context': {
                 'default_period_id': self.period_id.id,
-                'default_only_pending': True,
+                'default_only_pending': self.env.context.get('mobile_only_pending', True),
             },
         }
 
@@ -460,8 +462,10 @@ class WaterReading(models.Model):
 
     def _mobile_move(self, direction):
         self.ensure_one()
+        only_pending = self.env.context.get('mobile_only_pending', True)
         pending_readings = self.period_id.reading_ids.filtered(
-            lambda reading: reading.reading_current == 0 and reading.id != self.id
+            lambda reading: reading.id != self.id
+            and (not only_pending or reading.reading_current == 0)
         )
         selected_street = self.env.context.get('mobile_street')
         selected_pueblo = self.env.context.get('mobile_pueblo')
@@ -497,6 +501,7 @@ class WaterReading(models.Model):
             return target._mobile_action(
                 mobile_street=selected_street or '',
                 mobile_pueblo=selected_pueblo or '',
+                mobile_only_pending=only_pending,
             )
         return self.action_mobile_done()
 

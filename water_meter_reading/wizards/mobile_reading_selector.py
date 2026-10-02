@@ -184,8 +184,9 @@ class WaterReadingMobileSelector(models.TransientModel):
         self.ensure_one()
         reading = self._filtered_readings()[:1]
         if not reading:
-            raise UserError(_('La ruta seleccionada no tiene una lectura pendiente en este período.'))
+            raise UserError(_('La ruta seleccionada no tiene una lectura que cumpla los filtros de este período.'))
         return reading._mobile_action(
             mobile_street=self.street_id.name if self.street_id else '',
             mobile_pueblo=self.pueblo_id.name if self.pueblo_id else '',
+            mobile_only_pending=self.only_pending,
         )
