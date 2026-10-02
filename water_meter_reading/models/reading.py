@@ -465,13 +465,14 @@ class WaterReading(models.Model):
         )
         selected_street = self.env.context.get('mobile_street')
         selected_pueblo = self.env.context.get('mobile_pueblo')
-        current_street = (selected_street or self.meter_id.street or self.meter_id.address or '').strip().casefold()
-        pending_readings = pending_readings.filtered(
-            lambda reading: (
-                (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
-                == current_street
+        if selected_street:
+            current_street = selected_street.strip().casefold()
+            pending_readings = pending_readings.filtered(
+                lambda reading: (
+                    (reading.meter_id.street or reading.meter_id.address or '').strip().casefold()
+                    == current_street
+                )
             )
-        )
         if selected_pueblo:
             current_pueblo = selected_pueblo.strip().casefold()
             pending_readings = pending_readings.filtered(
@@ -494,7 +495,7 @@ class WaterReading(models.Model):
             target = candidates[-1] if candidates else ordered_pending[-1]
         if target:
             return target._mobile_action(
-                mobile_street=current_street,
+                mobile_street=selected_street or '',
                 mobile_pueblo=selected_pueblo or '',
             )
         return self.action_mobile_done()
