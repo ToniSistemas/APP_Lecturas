@@ -4,7 +4,7 @@ import io
 import unicodedata
 
 from odoo import _, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class WaterMeterImport(models.TransientModel):
@@ -119,6 +119,8 @@ class WaterMeterImport(models.TransientModel):
 
     def action_import(self):
         self.ensure_one()
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden importar censos.'))
         if self.period_id.state == 'closed':
             raise UserError(_('No se puede importar el censo en un período cerrado.'))
         rows = self._read_rows()
@@ -536,6 +538,8 @@ class WaterMeterImport(models.TransientModel):
 
     def action_import_rows(self, rows, import_readings=False):
         self.ensure_one()
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden importar censos.'))
         headers = {
             'ruta': 'Ruta',
             'contador': 'Contador',

@@ -81,6 +81,8 @@ class WaterPeriod(models.Model):
 
     def action_open_meter_import(self):
         self.ensure_one()
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden importar censos.'))
         if self.state == 'closed':
             raise UserError(_('No se puede importar el censo en un período cerrado.'))
         connection = self.env['water.mariadb.connection'].search([('active', '=', True)], limit=1)
@@ -101,10 +103,10 @@ class WaterPeriod(models.Model):
 
     def action_open_read_meter_import(self):
         self.ensure_one()
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden importar censos.'))
         if self.state == 'closed':
             raise UserError(_('No se puede importar en un período cerrado.'))
-        if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
-            raise AccessError(_('Solo los supervisores pueden importar censos ya leídos.'))
         connection = self.env['water.mariadb.connection'].search([('active', '=', True)], limit=1)
         if not connection:
             raise UserError(_('Configura primero una conexión MariaDB activa.'))
@@ -313,6 +315,12 @@ class WaterPeriod(models.Model):
         if not self.env.user.has_group('water_meter_reading.group_water_supervisor'):
             raise AccessError(_('Solo los supervisores pueden cerrar períodos.'))
         self.state = 'closed'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Solo los administradores pueden crear períodos.'))
+        return super().create(vals_list)
 
     def action_reopen(self):
         self.ensure_one()
